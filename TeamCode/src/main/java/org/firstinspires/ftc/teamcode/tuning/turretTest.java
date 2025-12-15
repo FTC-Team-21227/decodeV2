@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.tuning;
 
-import com.acmerobotics.dashboard.FtcDashboard;
+//import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -10,8 +10,8 @@ import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 @TeleOp
 public class turretTest extends LinearOpMode {
-    FtcDashboard dashboard = FtcDashboard.getInstance();
-    Telemetry telemetry = dashboard.getTelemetry();
+//    FtcDashboard dashboard = FtcDashboard.getInstance();
+//    Telemetry telemetry = dashboard.getTelemetry();
     Turret turret;//    private DigitalChannel LED_DigitalChannel;
 
     @Override
@@ -37,7 +37,7 @@ public class turretTest extends LinearOpMode {
                 turret.turnToRobotAngle(Math.PI* 3/2);
             }
             if (gamepad1.dpad_left){
-                turret.turnToRobotAngle(Math.atan2(Robot.Positions.goalPos.minus(Robot.Positions.autoShotPose.position).y,Robot.Positions.goalPos.minus(Robot.Positions.autoShotPose.position).x)-Math.toRadians(90));
+                turret.turnToRobotAngle(Math.atan2(Robot.Positions.goalPos.minus(Robot.Positions.autoShotPose.getAsVector()).getYComponent(),Robot.Positions.goalPos.minus(Robot.Positions.autoShotPose.getAsVector()).getXComponent())-Math.toRadians(90));
             }
             if (gamepad1.dpad_right){
                 turret.turnToRobotAngle(14*Math.PI/180);

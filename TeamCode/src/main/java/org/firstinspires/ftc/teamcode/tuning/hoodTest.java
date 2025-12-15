@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.tuning;
 
-import com.acmerobotics.dashboard.FtcDashboard;
+//import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -10,8 +10,8 @@ import org.firstinspires.ftc.teamcode.subsystems.Hood;
 @TeleOp(name = "Hood Test")
 // Program used to test hood positions
 public class hoodTest extends LinearOpMode {
-    FtcDashboard dashboard = FtcDashboard.getInstance();
-    Telemetry telemetry = dashboard.getTelemetry();
+//    FtcDashboard dashboard = FtcDashboard.getInstance();
+//    Telemetry telemetry = dashboard.getTelemetry();
     Hood hood;
 
     double HoodAngle=50;

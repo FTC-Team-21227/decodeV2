@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.tuning;
 
-import com.acmerobotics.dashboard.FtcDashboard;
+//import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -10,8 +10,8 @@ import org.firstinspires.ftc.teamcode.subsystems.Feeder;
 @TeleOp(name = "Feeder Test")
 // Program used to test hood positions
 public class feederTest extends LinearOpMode {
-    FtcDashboard dashboard = FtcDashboard.getInstance();
-    Telemetry telemetry = dashboard.getTelemetry();
+//    FtcDashboard dashboard = FtcDashboard.getInstance();
+//    Telemetry telemetry = dashboard.getTelemetry();
     Feeder feeder;
 
     double feederPos = 0;

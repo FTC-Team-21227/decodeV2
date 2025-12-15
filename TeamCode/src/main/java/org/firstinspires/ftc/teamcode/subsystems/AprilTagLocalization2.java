@@ -252,14 +252,14 @@ public class AprilTagLocalization2 {
 
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
-        FtcDashboard.getInstance().startCameraStream(visionPortal, 10);
+//        FtcDashboard.getInstance().startCameraStream(visionPortal, 10);
 
         // Disable or re-enable the aprilTag processor at any time.
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
     }   // End method initAprilTag()
     public void close(){
-        FtcDashboard.getInstance().stopCameraStream();
+//        FtcDashboard.getInstance().stopCameraStream();
         visionPortal.close();
     }
 

@@ -174,7 +174,7 @@ public class ExampleAuto extends OpMode {
         follower.update();
         autonomousPathUpdate();
         //autonomousSubsystemsUpdate();
-        robot.updateShooter(true, true,true,telemetry,true,new Pose2d(0,0,0),0,true,true,true,true,true,true,true,true,true,true,true);
+        robot.updateShooter(true, true,true,telemetry,true,new Pose(0,0,0),0,true,true,true,true,true,true,true,true,true,true,true);
         // Feedback to Driver Hub for debugging
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
