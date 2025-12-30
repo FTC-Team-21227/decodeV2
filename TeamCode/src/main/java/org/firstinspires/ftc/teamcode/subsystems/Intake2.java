@@ -3,63 +3,47 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.Robot2;
 
-public class Intake {
-    //power
+import java.util.concurrent.TimeUnit;
+
+public class Intake2 {
     DcMotor INTAKE;
-    double power = 0;
-    boolean paused = false;
     double voltageComp = 1;
-    //power
-    public Intake (HardwareMap hardwareMap){
+    ElapsedTime timer = new ElapsedTime();
+
+    public Intake2(HardwareMap hardwareMap){
         INTAKE = hardwareMap.get(DcMotor.class, "intake");
         INTAKE.setDirection(DcMotorSimple.Direction.REVERSE);
         INTAKE.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         INTAKE.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         INTAKE.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
-    // Modes
-    public void intake(){
-        if (!paused) INTAKE.setPower(1 * Robot.Constants.intakePower);
-        power = 1 * Robot.Constants.intakePower;
-    }
-    public void slowIntake(){
-        if (!paused) INTAKE.setPower(1*Robot.Constants.slowIntakePower);
-        power = 1*Robot.Constants.slowIntakePower;
-    }
-    public void outtake(){
-        if (!paused) INTAKE.setPower(-1*Robot.Constants.outtakePower);
-        power = -1*Robot.Constants.outtakePower;
-    }
-    public void strongOuttake(){
-        if (!paused) INTAKE.setPower(-1);
-        power = -1;
-    }
-    public void stop(){
-        if (!paused) INTAKE.setPower(0);
-        power = 0;
-    }
-    public void shortOuttake(){
-        if (!paused) INTAKE.setPower(-1 * Robot.Constants.outtakePower);
-        paused = true;
+
+    public void intake(double k) {INTAKE.setPower(k * Robot.Constants.intakePower);}
+
+    public void intake(double k, double runTime) {
+        timer.reset();
+        while (timer.time(TimeUnit.SECONDS) < runTime) {intake(k);}
+        stop();
+        timer.reset();
     }
 
-    // Pausing
-    public void pause(){
-        INTAKE.setPower(0);
-        paused = true;
+    public void outtake(double k) {INTAKE.setPower(-1 * k * Robot.Constants.outtakePower);}
+
+    public void outtake(double k, double runTime) {
+        timer.reset();
+        while (timer.time(TimeUnit.SECONDS) < runTime) {outtake(k);}
+        stop();
+        timer.reset();
     }
-    public void proceed() {
-        INTAKE.setPower(power * voltageComp);
-        paused = false;
-    }
-//    public void updateComp(){
-//        voltageComp = 14.0/Flywheel.volts;
-////        if (voltageComp %0.1==0){
-//            RobotLog.d("comp"+voltageComp);
-//            RobotLog.d("volts"+Flywheel.volts);
-////        }
-//    }
+
+    public void stop() {INTAKE.setPower(0);}
+
+    public void smallIntake() {intake(Robot2.Constants.slowIntakePower, Robot2.Constants.intakePulseTime);}
+
+    public void smallOuttake() {outtake(Robot2.Constants.outtakePower, Robot2.Constants.outtakePulseTime);}
 }

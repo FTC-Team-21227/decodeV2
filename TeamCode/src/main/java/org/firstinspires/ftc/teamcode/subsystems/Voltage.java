@@ -8,20 +8,25 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
  */
 public class Voltage {
     private double lastReading = 12;
-    private final VoltageSensor v;
+    private final VoltageSensor voltageSensor;
 
-    public Voltage(VoltageSensor v) {
-        this.v = v;
+    // Constructor
+    public Voltage(VoltageSensor voltageSensor) {
+        this.voltageSensor = voltageSensor;
     }
 
+    // Getter
     public VoltageSensor getSensor(){
-        return v;
+        return voltageSensor;
     }
 
+    // Get and set voltage value
     public double updateVoltage() {
-        lastReading = v.getVoltage();
+        lastReading = voltageSensor.getVoltage();
         return lastReading;
     }
+
+    // Get voltage value
     public double getVoltage() {
         return lastReading;
     }

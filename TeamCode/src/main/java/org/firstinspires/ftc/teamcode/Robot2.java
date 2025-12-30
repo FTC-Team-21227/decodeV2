@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import android.annotation.SuppressLint;
 
-import androidx.annotation.NonNull;
-
 import com.pedropathing.Drivetrain;
 import com.pedropathing.ErrorCalculator;
 import com.pedropathing.VectorCalculator;
@@ -11,41 +9,33 @@ import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
-import com.pedropathing.ftc.FollowerBuilder;
 import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.localization.Localizer;
 import com.pedropathing.localization.PoseTracker;
-import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Vector;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.paths.PathPoint;
-import com.pedropathing.paths.callbacks.PathCallback;
 import com.pedropathing.util.PoseHistory;
-import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.AprilTagLocalization2;
 import org.firstinspires.ftc.teamcode.subsystems.Feeder;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
-
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 // FULL ROBOT CLASS: drive, flywheel, turret, hood, feeder, intake, camera
-public class Robot {
-    private static Robot instance = null;
+public class Robot2 {
+    private static Robot2 instance = null;
 
     // --------------SUBSYSTEMS---------------------------------------------------------------------
     AprilFollower follower;
@@ -55,6 +45,7 @@ public class Robot {
     Turret turret;
     Hood hood;
     AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection
+    Shooter shooter;
 //    Voltage voltageSensor;
 
     // ---------------BOOLEANS AND ATTRIBUTES-------------------------------------------------------
@@ -117,7 +108,7 @@ public class Robot {
      * @param initialPose
      * @param color
      */
-    public Robot(Pose initialPose, Color color){
+    public Robot2(Pose initialPose, Color color){
         // Poses are mirrored if BLUE
         this.color = color;
         if (this.color== Color.RED) {
@@ -154,18 +145,18 @@ public class Robot {
      * NOTE: ALL DEVICES MUST BE REINITIALIZED BEFORE EVERY OPMODE, THEY ARE NOT SAVED.
      */
     // Get singleton instance
-    public static Robot getInstance(Pose initialPose, Color color){
+    public static Robot2 getInstance(Pose initialPose, Color color){
         if (instance == null || instance.opModeState == OpModeState.TELEOP){
             RobotLog.d("making a new instance");
-            instance = new Robot(initialPose, color);
+            instance = new Robot2(initialPose, color);
         }
         else RobotLog.d("keeping the instance");
         return instance;
     }
 
     // Create new instance
-    public static Robot startInstance(Pose initialPose, Color color){
-        instance = new Robot(initialPose, color);
+    public static Robot2 startInstance(Pose initialPose, Color color){
+        instance = new Robot2(initialPose, color);
         return instance;
     }
 
