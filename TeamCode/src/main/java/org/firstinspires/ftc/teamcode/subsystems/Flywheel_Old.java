@@ -11,29 +11,26 @@ import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.lib.CachedMotor;
 import org.firstinspires.ftc.teamcode.lib.FeedforwardController;
 import org.firstinspires.ftc.teamcode.lib.PIDController;
-
-//two-motor flywheel
-public class Flywheel {
+//1-motor flywheel
+public class Flywheel_Old {
     //pid methods
-    public CachedMotor FLYWHEEL_MASTER;
-    public CachedMotor FLYWHEEL2;
+    public CachedMotor FLYWHEEL;
     double targetVel;
+    double lastPower;
     PIDController pid;
     FeedforwardController f;
     VoltageSensor v;
     public static double volts;
     //power
-    public Flywheel(HardwareMap hardwareMap){
-        FLYWHEEL_MASTER = new CachedMotor(hardwareMap.get(DcMotorEx.class,"flywheel"));
-        FLYWHEEL_MASTER.setDirection(DcMotorSimple.Direction.REVERSE);
-        FLYWHEEL_MASTER.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        FLYWHEEL_MASTER.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        FLYWHEEL_MASTER.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        FLYWHEEL2 = new CachedMotor(hardwareMap.get(DcMotorEx.class,"flywheel2"));
-        FLYWHEEL2.setDirection(DcMotorSimple.Direction.FORWARD);
-        FLYWHEEL2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        FLYWHEEL2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        FLYWHEEL2.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+    public Flywheel_Old(HardwareMap hardwareMap){
+//        FLYWHEEL = hardwareMap.get(DcMotorEx.class, "flywheel");
+        FLYWHEEL = new CachedMotor(hardwareMap.get(DcMotorEx.class,"flywheel"));
+        FLYWHEEL.setDirection(DcMotorSimple.Direction.REVERSE);
+        FLYWHEEL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        FLYWHEEL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+//        FLYWHEEL.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+                FLYWHEEL.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+//        FLYWHEEL.getMotor().setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300,Robot.Constants.kI,Robot.Constants.kD,Robot.Constants.kF));
         v = hardwareMap.get(VoltageSensor.class, "Control Hub");
         pid = new PIDController(Robot.Constants.kP,Robot.Constants.kI,Robot.Constants.kD);
         f = new FeedforwardController(Robot.Constants.kS,Robot.Constants.kV);
@@ -46,26 +43,30 @@ public class Flywheel {
 //            FLYWHEEL.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(configvalues.p, configvalues.i, configvalues.d, configvalues.f));
         targetVel = vel;
         double curVel = getVel();
-        //pidf bangbang: go as fast as possible when spinning up then slow down for the last hundred ticks/s (doesnt work well)
+        //pidf bangbang: go as fast as possible when spinning up then slow down for the last hundred ticks/s
         if (/*Math.abs(targetVel-curVel) > 300*/ true) {
             double pdds = pid.calculate(curVel, targetVel);
 //        FLYWHEEL.getMotor().setVelocity(targetVel);
             volts = v.getVoltage();
-            double power = (pdds + f.calculate(targetVel)) / volts;
-            FLYWHEEL_MASTER.setPower(power);
-            FLYWHEEL2.setPower(power);
-            return power * volts;
+            FLYWHEEL.setPower((pdds + f.calculate(targetVel)) / volts);
+            return pdds + f.calculate(targetVel);
         }
         else{
             double power = Math.signum(targetVel-curVel);
-            FLYWHEEL_MASTER.setPower(power);
-            FLYWHEEL2.setPower(power);
+            FLYWHEEL.setPower(power);
             return power;
         }
     }
 
+    // Keep track of last power
+    public void setPower(double power){
+        if (power != lastPower){
+            lastPower = power;
+            FLYWHEEL.setPower(power);
+        }
+    }
     // Return flywheel current velocity
     public double getVel(){
-        return FLYWHEEL_MASTER.getMotor().getVelocity();
+        return FLYWHEEL.getMotor().getVelocity();
     }
 }

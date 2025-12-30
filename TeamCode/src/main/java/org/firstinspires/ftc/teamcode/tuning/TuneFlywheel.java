@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
+import org.firstinspires.ftc.teamcode.subsystems.Flywheel_Old;
 import org.firstinspires.ftc.teamcode.subsystems.Voltage;
 
 
@@ -16,12 +16,12 @@ import org.firstinspires.ftc.teamcode.subsystems.Voltage;
  * 10/11/25: Runs the flywheel and prints its velocity
  */
 public class TuneFlywheel extends LinearOpMode {
-    Flywheel f;
+    Flywheel_Old f;
     Voltage v;
     public static int targetVel = 0;
     public void runOpMode(){
 //        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        f = new Flywheel(hardwareMap);
+        f = new Flywheel_Old(hardwareMap);
         v = new Voltage(hardwareMap.get(VoltageSensor.class,"Control Hub"));
         waitForStart();
         while (opModeIsActive()){
