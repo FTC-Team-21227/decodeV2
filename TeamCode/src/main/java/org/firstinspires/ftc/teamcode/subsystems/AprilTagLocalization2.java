@@ -69,11 +69,10 @@ import java.util.List;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list.
  */
-//@TeleOp(name = "Concept: AprilTag Localization", group = "Concept")
-//@Disabled
+
 public class AprilTagLocalization2 {
 
-    private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
+    private static final boolean USE_WEBCAM = true;
 
     ElapsedTime pipelineTimer = new ElapsedTime();
     double averagePipe = 0;
@@ -103,31 +102,23 @@ public class AprilTagLocalization2 {
      * it's pointing straight left, -90 degrees for straight right, etc. You can also set the roll
      * to +/-90 degrees if it's vertical, or 180 degrees if it's upside-down.
      */
-    //TEMP CHANGE
     private Position cameraPosition = new Position(DistanceUnit.INCH,
-            5.183228346, 4.963070866, 7.79528, 0); // UNKNOWN CONSTANTS
-//    private Position cameraPosition = new Position(DistanceUnit.INCH,
-//            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
+            5.183228346, 4.963070866, 7.79528, 0);
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
-            0, -90, 180, 0); // UNKNOWN CONSTANTS
+            0, -90, 180, 0);
 
     public Position getCamPos()
     {
         return cameraPosition;
     }
 
-    /**
-     * The variable to store our instance of the AprilTag processor.
-     */
+    // The variable to store our instance of the AprilTag processor.
     private AprilTagProcessor aprilTag; // analyzes frames coming from camera, attached to EOCV pipeline
 
-    /**
-     * The variable to store our instance of the vision portal.
-     */
+    // The variable to store our instance of the vision portal.
     private VisionPortal visionPortal; //manages the overall pipeline
 //    OpenCvWebcam camera;
 
-//    @Override
     public AprilTagLocalization2(HardwareMap hardwareMap){ // Running...
 
         initAprilTag(hardwareMap); // initialize AprilTag Processor
@@ -170,10 +161,7 @@ public class AprilTagLocalization2 {
 
     }   // end method runOpMode()
 
-    /**
-     * Initialize the AprilTag processor.
-     */
-
+    // Initialize the AprilTag processor.
     private int getID(AprilTagDetection tag)
     {
         return tag.id;
@@ -203,12 +191,7 @@ public class AprilTagLocalization2 {
                 .setCameraPose(cameraPosition, cameraOrientation)
 
                 // == CAMERA CALIBRATION ==
-                // If you do not manually specify calibration parameters, the SDK will attempt
-                // to load a predefined calibration for your camera.
-//                .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271) // for 320x240
                 .setLensIntrinsics( 549.651, 549.651, 317.108, 236.644) // for 640x480:
-                // ... these parameters are fx, fy, cx, cy.
-
                 .build();
 
         // Adjust Image Decimation to trade-off detection-range for detection-rate.
@@ -232,7 +215,6 @@ public class AprilTagLocalization2 {
         }
 
         // Choose a camera resolution. Not all cameras support all resolutions.
-//        builder.setCameraResolution(new Size(320,240));
         builder.setCameraResolution(new Size(640,480));
 
         // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
@@ -263,11 +245,9 @@ public class AprilTagLocalization2 {
         visionPortal.close();
     }
 
-    /**
-     * Add telemetry about AprilTag detections.
-     */
-    public double telemetryAprilTag(Telemetry telemetry
-    ) {
+
+    // Returns robot yaw orientation
+    public double telemetryAprilTag(Telemetry telemetry) {
         telemetry.addData("FPS", visionPortal.getFps());
         pipelineTimer.reset();
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
@@ -321,7 +301,6 @@ public class AprilTagLocalization2 {
 //        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
 //        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
         telemetry.update();
-
         if (!currentDetections.isEmpty())
         {
             AprilTagDetection detection = currentDetections.get(0);
@@ -329,8 +308,10 @@ public class AprilTagLocalization2 {
         }
         return Double.NaN;
     }   // end method telemetryAprilTag()
-    public int detectObelisk(Telemetry telemetry, boolean detect
-    ) {
+
+
+    // Return Obelisk Apriltag ID #
+    public int detectObelisk(Telemetry telemetry, boolean detect) {
         if (!detect) return 0; // Obelisk detection off
         telemetry.addData("FPS", visionPortal.getFps());
         pipelineTimer.reset();
@@ -373,17 +354,12 @@ public class AprilTagLocalization2 {
     }   // end method telemetryAprilTag()
 
 
-    /**
-     * Update the Pose of the TURRET CENTER relative to the field in Official FTC Global Field Coordinates using the Goal Apriltag.
-     * FUTURE IMPROVEMENT: Only use the correct goal color apriltag to localize.
-     * @return robotPose, which is the position of the TURRET relative to the field
-     */
-    public Pose update(Telemetry telemetry
-    ) {
-        telemetry.addData("FPS", visionPortal.getFps()); //the FPS processed through the visionPortal for apriltag processing etc. =/= Dashboard Stream FPS
+    // Returns camera's field-relative position
+    public Pose update(Telemetry telemetry) {
+        telemetry.addData("FPS", visionPortal.getFps()); //the FPS processed through the visionPortal for apriltag processing
         pipelineTimer.reset();
 
-        //Get all Apriltag detections from the apriltag processor of the visionPortal
+        // Get all Apriltag detections from the apriltag processor of the visionPortal
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
@@ -423,8 +399,7 @@ public class AprilTagLocalization2 {
                     //display the instantaneous delay and average delay.
                     telemetry.addLine("\nPIPELINE TIME DELAY: (ms) " + time + "\n");
                     telemetry.addLine("\nAVERAGE DELAY: (ms) " + averagePipe + "\n");
-//                    telemetry.update();
-                    //return a new Pose with the robotPose x,y,yaw. Here, the robotPose is the position of the TURRET relative to the field.
+                    //return a new Pose with the robotPose x,y,yaw. Here, the robotPose is the position of the camera (field-rel)
                     return new Pose(detection.robotPose.getPosition().x,detection.robotPose.getPosition().y,detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS));
                 }
             } else {
@@ -433,13 +408,11 @@ public class AprilTagLocalization2 {
                 telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
             }
         }   // end for() loop
-//        telemetry.update();
         // This return statement is most likely redundant, but if a return did not occur in the loop, then return the first pose in currentDetections.
         if (!currentDetections.isEmpty())
         {
             AprilTagDetection detection = currentDetections.get(0);
             return new Pose(detection.robotPose.getPosition().x,detection.robotPose.getPosition().y,detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS));
-
         }
         // Return null if no apriltags are detected.
         return null;
