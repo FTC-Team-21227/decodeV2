@@ -355,8 +355,7 @@ public class AprilTagLocalization2 {
 
 
     // Returns camera's field-relative position
-    public Pose update(Telemetry telemetry
-    ) {
+    public Pose update(Telemetry telemetry) {
         telemetry.addData("FPS", visionPortal.getFps()); //the FPS processed through the visionPortal for apriltag processing
         pipelineTimer.reset();
 

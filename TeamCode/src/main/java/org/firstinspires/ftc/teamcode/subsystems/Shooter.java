@@ -135,40 +135,40 @@ public class Shooter {
                 }
                 launchState = LaunchState.SPIN_UP;
                 break;
-            case SPIN_UP:
-                if(flywheel.getVel() > flywheel.getTargetVel() - 50 || spinUpTimer.seconds() > Robot2.Constants.spinUpTimeout) {
-                    launchState = LaunchState.FEED_FRONT
-                }
-                break;
-            case FEED_FRONT:
-                intake.pause();
-                feeder.upFR(); // feeder starts
-                feederTimer.reset(); // feeder goes down
-                launchState = Robot2.LaunchState.LAUNCHING;
-                break;
-            case FEED_BACK:
-                intake.pause();
-                feeder.upBL();
-                feederTimer.reset();
-                launchState = Robot2.LaunchState.LAUNCHING;
-                break;
-            case LAUNCHING:
-                if (feederTimer.seconds() > Robot2.Constants.feedTime) {
-                    launchState = Robot2.LaunchState.FEED_DOWN;
-                    feeder.downFR();
-                    feeder.downBL();
-                    feederTimer.reset();
-                    shotReqFeederType = !shotReqFeederType;
-                }
-                break;
-            case FEED_DOWN:
-                if (feederTimer.seconds() > Robot2.Constants.feedDownTime) {
-                    launchState = Robot2.LaunchState.IDLE;
-                    feederTimer.reset();
-                    intake.proceed();
-                    if (shotReqAlt) chainShotCount++;
-                }
-                break;
+//            case SPIN_UP:
+//                if(flywheel.getVel() > flywheel.getTargetVel() - 50 || spinUpTimer.seconds() > Robot2.Constants.spinUpTimeout) {
+//                    launchState = LaunchState.FEED_FRONT
+//                }
+//                break;
+//            case FEED_FRONT:
+//                intake.pause();
+//                feeder.upFR(); // feeder starts
+//                feederTimer.reset(); // feeder goes down
+//                launchState = Robot2.LaunchState.LAUNCHING;
+//                break;
+//            case FEED_BACK:
+//                intake.pause();
+//                feeder.upBL();
+//                feederTimer.reset();
+//                launchState = Robot2.LaunchState.LAUNCHING;
+//                break;
+//            case LAUNCHING:
+//                if (feederTimer.seconds() > Robot2.Constants.feedTime) {
+//                    launchState = Robot2.LaunchState.FEED_DOWN;
+//                    feeder.downFR();
+//                    feeder.downBL();
+//                    feederTimer.reset();
+//                    shotReqFeederType = !shotReqFeederType;
+//                }
+//                break;
+//            case FEED_DOWN:
+//                if (feederTimer.seconds() > Robot2.Constants.feedDownTime) {
+//                    launchState = Robot2.LaunchState.IDLE;
+//                    feederTimer.reset();
+//                    intake.proceed();
+//                    if (shotReqAlt) chainShotCount++;
+//                }
+//                break;
         } // --------------------END OF STATE MANAGER--------------------------------
     }
 
