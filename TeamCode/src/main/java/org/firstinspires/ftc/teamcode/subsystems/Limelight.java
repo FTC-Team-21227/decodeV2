@@ -9,6 +9,7 @@ import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 
 public class Limelight {
@@ -30,32 +31,15 @@ public class Limelight {
             double tx = result.getTx(); // horizontal offset (deg)
             double ty = result.getTy(); // vertical offset (deg)
 
-            // UPDATE CAM CONSTANTS-----------
-            final double CAMERA_HEIGHT = 10.0; // camera height off ground
-            final double TARGET_HEIGHT = 24.0; // height of goal/target
-            final double CAMERA_PITCH = 0.0; // deg
-            final double TARGET_X = 144.0; // x-coord of target
-            final double TARGET_Y = 72.0;  // y-coord of target
+            Pose3D botpose = result.getBotpose();
+            // pose3d, field relative, coords + orientation
 
-            // Convert vertical angle to radians
-            double angleToTargetRad = Math.toRadians(CAMERA_PITCH + ty);
+            // Extract 2D pose
+            double x = botpose.getPosition().x;      // field X
+            double y = botpose.getPosition().y;      // field Y
+            double heading = botpose.getOrientation().getYaw(); // robot heading in radians
 
-            // Distance from camera to target
-            double distance = (TARGET_HEIGHT - CAMERA_HEIGHT) / Math.tan(angleToTargetRad);
-
-            // robot heading relative to target
-            double robotHeadingToTargetRad = Math.toRadians(tx);
-
-            // field-relative robot pos
-            double robotX = TARGET_X - distance * Math.cos(robotHeadingToTargetRad);
-            double robotY = TARGET_Y - distance * Math.sin(robotHeadingToTargetRad);
-
-            telemetry.addData("Robot X", robotX);
-            telemetry.addData("Robot Y", robotY);
-            telemetry.addData("Distance to Target", distance);
-
-            return new Pose(robotX, robotY, tx + 45); // field heading based on target heading??
-            // UPDATE HEADING LATER
+            return new Pose(x, y, heading);
         } else {
             telemetry.addData("Limelight", "No Targets");
             return null; // no target
