@@ -9,11 +9,7 @@ import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
-import com.pedropathing.ftc.InvertedFTCCoordinates;
-import com.pedropathing.ftc.PoseConverter;
 import com.pedropathing.geometry.BezierPoint;
-import com.pedropathing.geometry.CoordinateSystem;
-import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.PoseTracker;
 import com.pedropathing.math.Vector;
@@ -28,27 +24,28 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.subsystems.AprilTagLocalization2;
 import org.firstinspires.ftc.teamcode.subsystems.Feeder;
-import org.firstinspires.ftc.teamcode.subsystems.Flywheel_Old;
+import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 
 // FULL ROBOT CLASS: drive, flywheel, turret, hood, feeder, intake, camera
-public class Robot {
-    private static Robot instance = null;
+public class Robot2 {
+    private static Robot2 instance = null;
 
     // --------------SUBSYSTEMS---------------------------------------------------------------------
     AprilFollower follower;
     Intake intake;
     Feeder feeder;
-    Flywheel_Old flywheel;
+    Flywheel flywheel;
     Turret turret;
     Hood hood;
-    AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection, switch to limelight later
+    AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection
+    Shooter shooter;
 //    Voltage voltageSensor;
 
     // ---------------BOOLEANS AND ATTRIBUTES-------------------------------------------------------
@@ -61,7 +58,7 @@ public class Robot {
     double chainShotCount = 1; // How many balls to shoot consecutively
     double lastTime = 0; // Previous time, used to calculate loop time
     int driveSideSign = -1; // Alliance color changes forward vs backwards direction
-    Pose txWorldPinpoint = new Pose(0,0,Math.PI); // Robot pose based on pinpoint in inverted FTC coordinates (not pedro coordinates)
+    Pose txWorldPinpoint = new Pose(0,0,Math.PI); // Robot pose based on pinpoint
     Vector robotVel = new Vector(0,0);
     double robotAngVel = 0;
 
@@ -111,7 +108,7 @@ public class Robot {
      * @param initialPose
      * @param color
      */
-    public Robot(Pose initialPose /*in pedro coords*/, Color color){
+    public Robot2(Pose initialPose, Color color){
         // Poses are mirrored if BLUE
         this.color = color;
         if (this.color== Color.RED) {
@@ -138,7 +135,7 @@ public class Robot {
             RobotLog.d("What...");
         }
         // Robot's field relative pose, which starts at initialPose
-        txWorldPinpoint = initialPose.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
+        txWorldPinpoint = initialPose;
 //        voltageSensor = new Voltage(hardwareMap.get(VoltageSensor.class,"Control Hub"));
     }
 
@@ -148,18 +145,18 @@ public class Robot {
      * NOTE: ALL DEVICES MUST BE REINITIALIZED BEFORE EVERY OPMODE, THEY ARE NOT SAVED.
      */
     // Get singleton instance
-    public static Robot getInstance(Pose initialPose, Color color){
+    public static Robot2 getInstance(Pose initialPose, Color color){
         if (instance == null || instance.opModeState == OpModeState.TELEOP){
             RobotLog.d("making a new instance");
-            instance = new Robot(initialPose, color);
+            instance = new Robot2(initialPose, color);
         }
         else RobotLog.d("keeping the instance");
         return instance;
     }
 
     // Create new instance
-    public static Robot startInstance(Pose initialPose, Color color){
-        instance = new Robot(initialPose, color);
+    public static Robot2 startInstance(Pose initialPose, Color color){
+        instance = new Robot2(initialPose, color);
         return instance;
     }
 
@@ -679,10 +676,9 @@ public class Robot {
         intake = new Intake(hardwareMap);
         camera = new AprilTagLocalization2(hardwareMap);
         follower = new AprilFollower(org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap));
-        follower.setPose(txWorldPinpoint.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
 //        follower = new AprilFollower(hardwareMap, txWorldPinpoint);
         feeder = new Feeder(hardwareMap);
-        flywheel = new Flywheel_Old(hardwareMap);
+        flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
 
@@ -732,95 +728,11 @@ public class Robot {
         intake = new Intake(hardwareMap);
 //        camera = new AprilTagLocalization2(hardwareMap);
         follower = new AprilFollower(org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap));
-        follower.setPose(txWorldPinpoint.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
         feeder = new Feeder(hardwareMap);
-        flywheel = new Flywheel_Old(hardwareMap);
+        flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
 
-        // Set enums
-        opModeState = OpModeState.TELEOP;
-        launchState = LaunchState.IDLE;
-        driveState = DriveState.RELATIVE;
-
-        // Start timers
-        feederTimer = new ElapsedTime();
-        aprilTimer = new ElapsedTime();
-        intakeTimer = new ElapsedTime();
-
-        // Constants
-        Positions.drivePower = Constants.drivePower_Tele;
-        Positions.turretClip0 = Constants.turretClip0_tele;
-        Positions.turretClip1 = Constants.turretClip1_tele; //CHANGE BACK
-        Positions.flywheelPower = Constants.flywheelPower_Tele;
-        Positions.flywheelPowerOffset = 0;
-        Positions.turretAngleManualOffset = 0;
-        Positions.hoodAngleManualOffset = 0;
-        Constants.turretAngleOffset = 0;
-        Constants.hoodAngleOffset = 0;
-
-        // Logs and telemetry
-//        if (!Constants.MINIMIZE_TELEMETRY) {
-//            RobotLog.dd("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
-//            RobotLog.dd("auto shot pose", " "
-//                    + Positions.autoShotPose.position.x + " "
-//                    + Positions.autoShotPose.position.y + " "
-//                    + Positions.autoShotPose.heading.toDouble());
-//            RobotLog.dd("auto shot pose far", " "
-//                    + Positions.autoShotPose_Far.position.x + " "
-//                    + Positions.autoShotPose_Far.position.y + " "
-//                    + Positions.autoShotPose_Far.heading.toDouble());
-//            RobotLog.dd("tele shot pose", " "
-//                    + Positions.teleShotPose.position.x + " "
-//                    + Positions.teleShotPose.position.y + " "
-//                    + Positions.teleShotPose.heading.toDouble());
-//            RobotLog.dd("initial pose", " "
-//                    + txWorldPinpoint.position.x + " "
-//                    + txWorldPinpoint.position.y + " "
-//                    + txWorldPinpoint.heading.toDouble());
-//            RobotLog.dd("deltaH", " " + Positions.deltaH);
-//            telemetry.addData("goal pos", " "
-//                    + Positions.goalPos.x + " "
-//                    + Positions.goalPos.y);
-//            telemetry.addData("auto shot pose far", " "
-//                    + Positions.autoShotPose_Far.position.x + " "
-//                    + Positions.autoShotPose_Far.position.y + " "
-//                    + Positions.autoShotPose_Far.heading.toDouble());
-//            telemetry.addData("tele shot pose", " "
-//                    + Positions.teleShotPose.position.x + " "
-//                    + Positions.teleShotPose.position.y + " "
-//                    + Positions.teleShotPose.heading.toDouble());
-//            telemetry.addData("initial pose", " "
-//                    + txWorldPinpoint.position.x + " "
-//                    + txWorldPinpoint.position.y + " "
-//                    + txWorldPinpoint.heading.toDouble());
-//            telemetry.addData("auto shot pose", " "
-//                    + Positions.autoShotPose.position.x + " "
-//                    + Positions.autoShotPose.position.y + " "
-//                    + Positions.autoShotPose.heading.toDouble());
-//            telemetry.addData("deltaH", " " + Positions.deltaH);
-//        }
-//        telemetry.addData("Status", "Initialized"); // IMPORTANT
-//        if (!Constants.MINIMIZE_TELEMETRY) {
-//            RobotLog.dd("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
-//            RobotLog.dd("auto shot pose", " " + Positions.autoShotPose.position.x + " " + Positions.autoShotPose.position.y + " " + Positions.autoShotPose.heading.toDouble());
-//            RobotLog.dd("auto shot pose far", " " + Positions.autoShotPose_Far.position.x + " " + Positions.autoShotPose_Far.position.y + " " + Positions.autoShotPose_Far.heading.toDouble());
-//            RobotLog.dd("tele shot pose", " " + Positions.teleShotPose.position.x + " " + Positions.teleShotPose.position.y + " " + Positions.teleShotPose.heading.toDouble());
-//            RobotLog.dd("initial pose", " " + txWorldPinpoint.position.x + " " + txWorldPinpoint.position.y + " " + txWorldPinpoint.heading.toDouble());
-//            RobotLog.dd("deltaH", " " + Positions.deltaH);
-//        }
-//        telemetry.addData("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
-//        telemetry.addData("auto shot pose far", " " + Positions.autoShotPose_Far.position.x + " " +  Positions.autoShotPose_Far.position.y + " " + Positions.autoShotPose_Far.heading.toDouble());
-//        telemetry.addData("tele shot pose", " " + Positions.teleShotPose .position.x + " " +  Positions.teleShotPose .position.y + " " + Positions.teleShotPose .heading.toDouble());
-//        telemetry.addData("initial pose", " " + txWorldPinpoint.position.x + " " + txWorldPinpoint.position.y + " " + txWorldPinpoint.heading.toDouble());
-//        telemetry.addData("auto shot pose", " " + Positions.autoShotPose.position.x + " " +  Positions.autoShotPose.position.y + " " + Positions.autoShotPose.heading.toDouble());
-//        telemetry.addData("deltaH"," "+ Positions.deltaH);
-//        telemetry.addData("Status", "Initialized"); //IMPORTANT
-//        RobotLog.d("dirve side sign"+driveSideSign);
-//        telemetry.update();
-    } // END OF INITIALIZATION FUNCTION
-    public void initFollower(HardwareMap hardwareMap, Telemetry telemetry) {
-        follower = new AprilFollower(org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap));
         // Set enums
         opModeState = OpModeState.TELEOP;
         launchState = LaunchState.IDLE;
@@ -920,8 +832,8 @@ public class Robot {
         public final static double deltaH = 39; //height of wall = 54, height of ball exit = 18 inch - 3 inch //32; //height of turret = 8.436535433
         public final static double deltaH_far = 41;
         // GOAL POSES
-        public final static Vector goalPos = new Vector(Math.hypot(-58.3727-5.3,55.6425+5.3), Math.atan2(55.6425+5.3,-58.3727-5.3)); //distance to triangle center = 7.5 inch
-        public final static Vector goalPos_far = new Vector(Math.hypot(-70,55.6425+12), Math.atan2(55.6425+12,-70)); //distance to triangle center = 7.5 inch
+        public final static Vector goalPos = new Vector(-58.3727-5.3,55.6425+5.3); //distance to triangle center = 7.5 inch
+        public final static Vector goalPos_far = new Vector(-70,55.6425+12); //distance to triangle center = 7.5 inch
         // SHOT POSES
         public final static Pose autoShotPose = new Pose(-43,33,Math.toRadians(90)); //new Pose2d(-12,15,Math.toRadians(90));
         public final static Pose autoShotPose_Far = new Pose(56,12,Math.toRadians(120));
@@ -944,8 +856,8 @@ public class Robot {
         // HOOD
         public final static double hoodLowAngle = 65.36742754 * Math.PI/180; // the traj angle from horizonatla (rad) //75 //0;
         public final static double hoodHighAngle = 24.47717215 * Math.PI/180; //30 //50*Math.PI/180; //the traj angle from horizontal 55; // Highest actual degree is 41
-        public final static double hoodScale0 = 0.2; //0.27;
-        public final static double hoodScale1 = 0.8; //1; //0.85;
+        public final static double hoodScale0 = 0.15; //0.27;
+        public final static double hoodScale1 = 0.83; //1; //0.85;
         // TURRET
         /**
          * turret 0 = 0.48
@@ -1014,73 +926,6 @@ public class Robot {
         return false;
     } // END OF DRIVING FUNCTION
 
-    //temp testing method
-    //use txWorldPinpoint instead of follower.getPose() for like every method thinkable
-    //shoter calculations are all done in the InvertedFTCCoordinates coordinate system. to be consistent with old code and camera coordinates
-    public void calculateShooter(Telemetry telemetry, boolean moveShot){
-        // --------------------Getting robot pose and velocity----------------------
-        Pose poseRobot = txWorldPinpoint; // Robot pose
-//        poseRobot.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
-//        Pose2D poseRobot = PoseConverter.poseToPose2D(pedroPose, InvertedFTCCoordinates.INSTANCE);
-        Vector linVel = robotVel;   // in in/s (consistent with other code)
-        double angVel = robotAngVel;         // rad/s
-
-        // ------------------------Shooting trajectory values-----------------------
-        double p = 0.65; // Fraction of time along trajectory from ground to ground
-        double g = 386.22; // Gravity (in/s^2)
-        double deltaH = Positions.deltaH; // Height difference from shooter to goal
-        double flightTime = Math.sqrt(2 * deltaH / (p * g * (1 - p))); // Ball trajectory time from ground to ground
-
-        // ---------------------------Moving shot correction------------------------
-        // angVel thing is incorrect, the heading should be same as original but the turning should offset the virtual pose a tiny bit more.
-        // this thing is super wrong right now
-        Pose correctedPoseRobot = new Pose(poseRobot.getAsVector().plus(linVel.times(flightTime)).getXComponent(),poseRobot.getAsVector().plus(linVel.times(flightTime)).getYComponent(),poseRobot.getHeadingAsUnitVector().times(angVel*flightTime).getMagnitude());
-        if (moveShot){
-            poseRobot = correctedPoseRobot;
-        }
-
-
-        // Calculate shot vector using TURRET's position on the robot and ROBOT's heading---
-        Pose pose = poseRobot.plus(Constants.turretPos); // Turret's field-relative position
-        Vector goalVector = Positions.goalPos.minus(pose.getAsVector());
-        double distance = goalVector.getMagnitude(); // Horizontal distance
-        double goalVectorAngle = goalVector.getTheta(); // Angle
-
-        // -----Calculate hood angle, flywheel velocity, and turret angle--------
-        theta = Math.atan(deltaH / (distance * (1 - p))); // Ball launch angle of elevation
-        double vel = distance / (p * flightTime * Math.cos(theta)); // Ball launch speed
-        double heading = pose.getHeading(); //
-        turretAngle = goalVectorAngle - heading; // Angle to turn turret to (relative to robot's heading)
-        double wheelRadius = 1.89;
-        /*
-        double wheelCircumference = Math.PI * wheelDiameter;
-        double change = 0;
-        if (up) change += 0.001;
-        if (down) change -= 0.001;
-        StarterRobot.Constants.flywheelPower += change;
-        */
-        // Convert vel (speed) to rad/s (example calibration: vel = wheelRadius * rad/s
-        radps = vel / wheelRadius; // velocity in rad per s
-
-
-        // ---------------------------TELEMETRY LINES--------------------------------
-        telemetry.addLine("robotTurretPose (inchxinchxdeg): " + pose.getX()+" "+pose.getY()+" "+pose.getHeading()); //NOT IMPORTANT
-        telemetry.addLine("goalVector (inchxinch): " + goalVector.getXComponent()+" "+goalVector.getYComponent());
-        telemetry.addLine("goalPos (inchxinch): " + Positions.goalPos.getXComponent()+" "+ Positions.goalPos.getYComponent()); //NOT IMPORTANT
-//        if (!Constants.MINIMIZE_TELEMETRY) {
-            telemetry.addData("goalVector angle (rad to deg)", Math.toDegrees(goalVectorAngle)); //NOT IMPORTANT
-            telemetry.addData("distance to goal (inch)", distance); //NOT IMPORTANT
-//        }
-        telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
-        telemetry.addData("hood theta (rad to deg)", theta*180/Math.PI);
-        telemetry.addData("hood angle offset (rad to deg)", Constants.hoodAngleOffset*180/Math.PI);
-        telemetry.addData("hood angle offset manual (rad to deg)", Positions.hoodAngleManualOffset*180/Math.PI);
-        telemetry.addData("targetVel (rad/s to tick/s)", radps*28/Math.PI/2*(Positions.flywheelPower+ Positions.flywheelPowerOffset));
-//        if (!Constants.MINIMIZE_TELEMETRY) {
-            telemetry.addData("targetVel (rad/s)", radps); //NOT IMPORTANT
-//        }
-//        telemetry.update();
-    }
 
     // ---------------------------SHOOTER METHOD----------------------------------------------------
     // Calculates and sets hood angle and flywheel RPM. Includes shooter state manager.
@@ -1091,7 +936,7 @@ public class Robot {
                               boolean flywheelOff, boolean frontUp, boolean frontDown,
                               boolean backUp, boolean backDown, boolean moveShot) {
         // --------------------Getting robot pose and velocity----------------------
-        Pose poseRobot = txWorldPinpoint; // Robot pose
+        Pose poseRobot = follower.getPose(); // Robot pose
         Vector linVel = robotVel;   // in in/s (consistent with other code)
         double angVel = robotAngVel;         // rad/s
 
@@ -1361,9 +1206,7 @@ public class Robot {
         switch (driveState){
             case RELATIVE:
                 follower.update();
-                txWorldPinpoint = follower.getPose().getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
                 robotVel = follower.getVelocity();
-                robotVel.rotateVector(-Math.PI/2);
                 robotAngVel = follower.getAngularVelocity();
 //                if (aprilTimer.seconds() > 10){
 //                    driveState = DriveState.ABSOLUTE;
@@ -1398,7 +1241,7 @@ public class Robot {
 
     // ---------------------------------------AIMING------------------------------------------------
     public boolean setGoalTarget(){
-        double x = txWorldPinpoint.getX();
+        double x = follower.getPose().getX();
         boolean close = x < 10;
         if (close){
             Positions.goalPos = handleVector(Constants.goalPos);
@@ -1456,8 +1299,7 @@ public class Robot {
     // --------------------------------HELPER METHODS-----------------------------------------------
     // Mirror a vector
     public Vector mirrorVector(Vector vector){
-        vector.setOrthogonalComponents(vector.getXComponent(), -vector.getYComponent());
-        return vector;
+        return new Vector(vector.getXComponent(), -vector.getYComponent());
     }
     // If blue, mirror the pose
     public Pose handlePose(Pose pose){
