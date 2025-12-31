@@ -10,9 +10,7 @@ import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.InvertedFTCCoordinates;
-import com.pedropathing.ftc.PoseConverter;
 import com.pedropathing.geometry.BezierPoint;
-import com.pedropathing.geometry.CoordinateSystem;
 import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.PoseTracker;
@@ -28,12 +26,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.subsystems.AprilTagLocalization2;
+import org.firstinspires.ftc.teamcode.subsystems.BallDetector;
 import org.firstinspires.ftc.teamcode.subsystems.Feeder;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel_Old;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Intake_Old;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 
@@ -49,6 +48,7 @@ public class Robot {
     Turret turret;
     Hood hood;
     AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection, switch to limelight later
+    BallDetector ballDetector;
 //    Voltage voltageSensor;
 
     // ---------------BOOLEANS AND ATTRIBUTES-------------------------------------------------------
@@ -82,6 +82,15 @@ public class Robot {
         LAUNCHING,
         FEED_DOWN,
     } private LaunchState launchState; // Instance
+
+    //enum that manages intake state
+    private enum IntakeState {
+        IDLE,
+        INTAKING,
+        OUTTAKING,
+        TRANSFERRING
+    } private IntakeState intakeState; // Instance
+
 
     // Enum that switches between pinpoint and camera localization
     private enum DriveState {
@@ -685,6 +694,7 @@ public class Robot {
         flywheel = new Flywheel_Old(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
+        ballDetector = new BallDetector(hardwareMap);
 
         this.opModeState = opModeState;
         launchState = LaunchState.IDLE;
@@ -737,6 +747,8 @@ public class Robot {
         flywheel = new Flywheel_Old(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
+        ballDetector = new BallDetector(hardwareMap);
+
 
         // Set enums
         opModeState = OpModeState.TELEOP;
@@ -1014,7 +1026,7 @@ public class Robot {
         return false;
     } // END OF DRIVING FUNCTION
 
-    //temp testing method
+    //temp testing method delete it later
     //use txWorldPinpoint instead of follower.getPose() for like every method thinkable
     //shoter calculations are all done in the InvertedFTCCoordinates coordinate system. to be consistent with old code and camera coordinates
     public void calculateShooter(Telemetry telemetry, boolean moveShot){
@@ -1349,6 +1361,58 @@ public class Robot {
         telemetry.addData("feeder fr pos", feeder.FR_FEEDER.getPosition());
         telemetry.addData("feeder bl pos", feeder.BL_FEEDER.getPosition());
         telemetry.addData("feeder seconds", feederTimer.seconds()); //NOT IMPORTANT
+//        telemetry.update();
+    } // -------------------------------END OF UPDATE SHOOTER---------------------------------------
+
+
+    // ---------------------------INTAKE METHOD----------------------------------------------------
+    public void updateIntake(boolean in, boolean out, boolean stopIn, boolean shoot, Telemetry telemetry) {
+        // ---------------START OF SHOOTER STATE MANAGER----------------------
+        switch (intakeState) {
+            case IDLE: // ------------------------------------------------------
+                if (shoot) {
+                    intake.intake();
+                    intakeState = IntakeState.TRANSFERRING;
+                } else if (in) {
+                    intake.intake();
+                    intakeState = IntakeState.INTAKING;
+                } else if (out) {
+                    intake.outtake();
+                    intakeState = IntakeState.OUTTAKING;
+                }
+//                if (4) {
+//                    intake.outtake();
+//                    intakeState = IntakeState.OUTTAKING;
+//                }
+                break; // END OF IDLE STATE
+
+            case INTAKING:
+                if (stopIn){
+                    intake.stop();
+                    intakeState = IntakeState.IDLE;
+                }
+                if (ballDetector.ballPresent(telemetry)){ //ball present at top. or 3
+                    intake.stop();
+                    intakeState = IntakeState.IDLE;
+                }
+//                if (4){
+//                    intake.outtake();
+//                    intakeState = IntakeState.OUTTAKING;
+//                }
+                break;
+            case OUTTAKING:
+                if (!out){
+                    intake.stop();
+                    intakeState = IntakeState.IDLE;
+                }
+                break;
+            case TRANSFERRING: // FEED BALL------------------------------------
+                if (!shoot){
+                    intake.stop();
+                    intakeState = IntakeState.IDLE;
+                }
+                break;
+        } // --------------------END OF STATE MANAGER--------------------------------
 //        telemetry.update();
     } // -------------------------------END OF UPDATE SHOOTER---------------------------------------
 

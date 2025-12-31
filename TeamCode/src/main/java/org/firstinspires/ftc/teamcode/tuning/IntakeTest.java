@@ -4,15 +4,14 @@ package org.firstinspires.ftc.teamcode.tuning;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Intake_Old;
 
 @TeleOp(name = "Intake Test")
 // Program used to test hood positions
 public class IntakeTest extends LinearOpMode {
 //    FtcDashboard dashboard = FtcDashboard.getInstance();
 //    Telemetry telemetry = dashboard.getTelemetry();
-    Intake hood;
+    Intake_Old hood;
 
 
     @Override
@@ -36,6 +35,6 @@ public class IntakeTest extends LinearOpMode {
     }
 
     private void initialization() {
-        hood = new Intake(hardwareMap);
+        hood = new Intake_Old(hardwareMap);
     }
 }
