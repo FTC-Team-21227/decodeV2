@@ -9,6 +9,7 @@ import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.ftc.InvertedFTCCoordinates;
 import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.PoseTracker;
@@ -19,6 +20,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.paths.PathPoint;
 import com.pedropathing.util.PoseHistory;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
@@ -26,23 +28,26 @@ import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 
 public class Robot2 {
     private static Robot2 instance = null;
-    // Subsystems
+    // SUBSYSTEMS
     Robot2.AprilFollower follower;
     Shooter shooter; // Transfer system (intake), flywheel, turret, and hood
     Limelight limelight; // Limelight subsystem used in AprilDrive and Obelisk detection
 
-    // Attributes
+
+    // ATTRIBUTES
     double lastTime = 0; // Previous time, used to calculate loop time
+    ElapsedTime aprilTimer; // Time between aprilTag relocalizations
     int driveSideSign = -1; // Alliance color changes forward vs backwards direction
     Pose txWorldPinpoint = new Pose(0,0,Math.PI); // Robot pose based on pinpoint in inverted FTC coordinates (not pedro coordinates)
     Vector robotVel = new Vector(0,0);
     double robotAngVel = 0;
 
-    // Robot enums
+
+    // ROBOT STATES
     private enum DriveState { // Enum that switches between pinpoint and camera localization
         RELATIVE,
         ABSOLUTE, // Drive with AprilTag localization for absolute position on field
-        ABSOLUTE2
+        ABSOLUTE_TELE_RESET
     } private Robot2.DriveState driveState;
 
     public enum Color { // Enum that stores the alliance color, accessible globally
@@ -58,14 +63,124 @@ public class Robot2 {
     } public Robot2.OpModeState opModeState;
 
 
+    // Drives robot field-centric in teleop
+    public boolean driveFieldCentric(double forward, double right, double rotate, boolean slowMode, boolean p2p) {
+        if (!p2p) { // P2P action?
+            // Slow mode?
+            if (slowMode) {Robot.Positions.drivePower = Robot.Constants.drivePower_Slow;}
+            else {Robot.Positions.drivePower = Robot.Constants.drivePower_Tele;}
+            follower.setTeleOpDrive(
+                    -forward,
+                    -right,
+                    -rotate,
+                    true // Robot Centric
+            );
+        }
+        else{follower.holdPoint(follower.getPose());} // Stay at point
+        return false;
+    }
 
 
+    // Teleop Relocalization method
+    /**
+     * Returns field-relative robot pose (calculated using turret pose), or returns Pinpoint-recorded
+     * pose if no AprilTag detections. Also displays pose information on telemetry.
+     */
+    public void updateFollower(boolean relocalize, boolean relocalize2, Telemetry telemetry){
+        switch (driveState){
+            case RELATIVE:
+                follower.update();
+                txWorldPinpoint = follower.getPose().getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
+                robotVel = follower.getVelocity();
+                robotVel.rotateVector(-Math.PI/2);
+                robotAngVel = follower.getAngularVelocity();
+//                if (aprilTimer.seconds() > 10){
+//                    driveState = DriveState.ABSOLUTE;
+//                }
+                if (relocalize) driveState = Robot2.DriveState.ABSOLUTE;
+                if (relocalize2) driveState = Robot2.DriveState.ABSOLUTE_TELE_RESET;
+                break;
+            case ABSOLUTE:
+                boolean success = follower.relocalize(telemetry);
+                if (success) aprilTimer.reset();
+                driveState = Robot2.DriveState.RELATIVE;
+                break;
+            case ABSOLUTE_TELE_RESET:
+                Pose newPose = handlePose(new Pose(-51.84,51.2636,Math.toRadians(-54.2651)));
+                follower.setPose(newPose);
+                txWorldPinpoint = newPose;
+                Robot.Constants.hoodAngleOffset = 0;
+                Robot.Constants.turretAngleOffset = 0;
+                Robot.Positions.turretAngleManualOffset = 0;
+                Robot.Positions.hoodAngleManualOffset = 0;
+                driveState = Robot2.DriveState.RELATIVE;
+                break;
+        }
+        double curTime = aprilTimer.milliseconds();
+        telemetry.addData("loop time (ms)",curTime-lastTime);
+        telemetry.addData("time since last relocalization (s)", curTime / 1000.0); //IMPORTANT
+        lastTime = curTime;
+        telemetry.addData("x", follower.getPose().getX()); //ALL IMPORTANT
+        telemetry.addData("y", follower.getPose().getY());
+        telemetry.addData("heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+    }
 
 
+    // Set Teleop Goal Position
+    public boolean setTeleGoalPos(){
+        double x = txWorldPinpoint.getX();
+        boolean close = x < 10;
+        if (close){
+            Robot.Positions.goalPos = handleVector(Robot.Constants.goalPos);
+            Robot.Positions.deltaH = Robot.Constants.deltaH;
+            Robot.Positions.teleShotPose = handlePose(Robot.Constants.teleShotPose);
+            opModeState = Robot2.OpModeState.TELEOP;
+        }
+        else { //change to be better at far
+            Robot.Positions.goalPos = handleVector(Robot.Constants.goalPos_far);
+            Robot.Positions.deltaH = Robot.Constants.deltaH_far;
+            Robot.Positions.teleShotPose = handlePose(Robot.Constants.teleShotPose_Far);
+            opModeState = Robot2.OpModeState.TELEOP_FAR;
+        }
+        return close;
+    }
 
 
+    // TODO: Teleop intake control method. ?-How will this work with shooter? will have to figure out
+    public void controlIntake(boolean in, boolean out, boolean stop, boolean tapOut, boolean inSlow, boolean outFast){
 
-    // ----------------------------DRIVETRAIN CLASS OF ROBOT----------------------------------------
+    }
+
+
+    // --------------------------------HELPER METHODS-----------------------------------------------
+    // Mirror a vector
+    public Vector mirrorVector(Vector vector){
+        vector.setOrthogonalComponents(vector.getXComponent(), -vector.getYComponent());
+        return vector;
+    }
+    // If blue, mirror the pose
+    public Pose handlePose(Pose pose){
+        if (color == Robot2.Color.BLUE){return pose.mirror();}
+        return pose;
+    }
+    // If blue, mirror the vector
+    public Vector handleVector(Vector vector){
+        if (color == Robot2.Color.BLUE){return mirrorVector(vector);}
+        return vector;
+    }
+
+    // Return color sequence based on obelisk ID #
+    public static char[] getDesiredPattern(int obeliskID) {
+        switch (obeliskID) {
+            case 21: return new char[]{'G','P','P'};
+            case 22: return new char[]{'P','G','P'};
+            case 23: return new char[]{'P','P', 'G'};
+            default: return new char[]{'G','P','P'}; // fallback
+        }
+    }
+
+
+    // -------------------------APRIL TAG DRIVETRAIN CLASS OF ROBOT---------------------------------
     // Resets localizer using AprilTags. Extends Pedropathing Follower class.
     public class AprilFollower{
         private final Follower robotBase;
@@ -534,5 +649,5 @@ public class Robot2 {
 
             return true; // Returns true for successful relocalization
         }
-    } // END OF APRILDRIVE CLASS
+    } // ----------------------------------END OF APRILDRIVE CLASS----------------------------------
 }
