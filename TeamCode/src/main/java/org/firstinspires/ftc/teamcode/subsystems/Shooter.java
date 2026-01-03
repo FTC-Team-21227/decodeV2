@@ -77,7 +77,7 @@ public class Shooter {
     }
 
     // Teleop shooting that allows human adjustment and human feeding
-    public void updateTeleShots(boolean humanFeed, boolean toggleLock, Pose robotPose, boolean flywheelUp, boolean flywheelDown, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight) {
+    public void updateTeleShots(boolean shoot, boolean humanFeed, boolean toggleLock, Pose robotPose, boolean flywheelUp, boolean flywheelDown, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight) {
         boolean shooterLocked = false;
         double flywheelVel = calculateFlywheelVel(robotPose);
         double hoodAngle = calculateHoodAngle(robotPose);
@@ -106,11 +106,15 @@ public class Shooter {
                 flywheel.spinTo(flywheelVel + adjustFlywheel);
                 hood.turnToAngle(hoodAngle + adjustHood);
                 turret.turnToRobotAngle(turretAngle + adjustTurret);
+                // Shoot
+                if(shoot) {shootSequence(flywheelVel + adjustFlywheel, hoodAngle + adjustHood, turretAngle + adjustTurret);}
             }
             else { // Normal
                 flywheel.spinTo(flywheelVel);
                 hood.turnToAngle(hoodAngle);
                 turret.turnToRobotAngle(turretAngle);
+                // Shoot
+                if(shoot) {shootSequence(flywheelVel, hoodAngle, turretAngle);}
             }
         }
     }
