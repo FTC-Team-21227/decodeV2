@@ -33,6 +33,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Flywheel_Old;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Intake_Old;
+import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 
@@ -47,7 +48,8 @@ public class Robot {
     Flywheel_Old flywheel;
     Turret turret;
     Hood hood;
-    AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection, switch to limelight later
+//    AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection, switch to limelight later
+    Limelight camera;
     BallDetector ballDetector;
 //    Voltage voltageSensor;
 
@@ -686,7 +688,8 @@ public class Robot {
             Positions.deltaH = Constants.deltaH_far;
         }
         intake = new Intake(hardwareMap);
-        camera = new AprilTagLocalization2(hardwareMap);
+//        camera = new AprilTagLocalization2(hardwareMap);
+        camera = new Limelight(hardwareMap);
         follower = new AprilFollower(org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap));
         follower.setPose(txWorldPinpoint.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
 //        follower = new AprilFollower(hardwareMap, txWorldPinpoint);
@@ -741,6 +744,7 @@ public class Robot {
         // Initialize subsystems
         intake = new Intake(hardwareMap);
 //        camera = new AprilTagLocalization2(hardwareMap);
+        camera = new Limelight(hardwareMap);
         follower = new AprilFollower(org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap));
         follower.setPose(txWorldPinpoint.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
         feeder = new Feeder(hardwareMap);

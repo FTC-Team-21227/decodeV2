@@ -1051,7 +1051,7 @@ public class Robot2 {
             turretAngle = 0;
         }
         if (flywheelOff){ //not actually flywheelOff but really changing the disable status
-            flywheel.FLYWHEEL.getMotor().setPower(0);
+            flywheel.FLYWHEEL_MASTER.getMotor().setPower(0);
             telemetry.addLine("trying to 0");
         }
         //----Set turret, flywheel, and hood to calculated positions + offsets----
