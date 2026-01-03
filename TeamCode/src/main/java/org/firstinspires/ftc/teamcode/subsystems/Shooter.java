@@ -4,25 +4,18 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Robot2;
+import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.constants.RobotConstants;
 
 
 public class Shooter {
-    // SUBSYSTEMS AND TIMERS
     private Hood hood;
     private Turret turret;
     private Flywheel flywheel;
-    private Feeder feeder;
-    private Intake2 intake;
-    Pose goalPose;
-
-    int alreadyShot = 0;
-    int shotRequests = 0;
+    private Intake2 intakeTransfer;
 
     // CONSTANTS
     public double P = RobotConstants.P; // Fraction of time along trajectory from ground to ground
-    final double G = RobotConstants.G; // Gravity (in/s^2)
     final double DELTA_H = RobotConstants.DELTA_H; // Height difference from shooter to goal
     final double FLIGHT_TIME = RobotConstants.FLIGHT_TIME; // Ball trajectory time from ground to ground
     double FLYWHEEL_MIN_VEL = RobotConstants.FLYWHEEL_MIN_VEL;
@@ -32,8 +25,8 @@ public class Shooter {
 
     // METHODS
     public Vector getGoalVector(Pose robotPose) {
-        Pose turretPose = robotPose.plus(Robot2.Constants.turretPos);
-        return Robot2.Positions.goalPos.minus(turretPose.getAsVector());
+        Pose turretPose = robotPose.plus(RobotConstants.turretPos);
+        return RobotConstants.goalPos.minus(turretPose.getAsVector());
     }
 
     public double calculateFlywheelVel(Pose robotPose) {
@@ -50,7 +43,7 @@ public class Shooter {
         // Calculate angle in radians
         double theta = Math.atan(DELTA_H / (goalDistance * (1 - P))); // Ball launch angle of elevation
         // Add offsets
-        return theta + Robot2.Constants.hoodAngleOffset;
+        return theta + RobotConstants.HOOD_OFFSET;
 
     }
 
@@ -59,7 +52,7 @@ public class Shooter {
         // Calculate angle
         double turretAngle = goalVectorAngle - robotPose.getHeading();
         // Add offsets
-        return turretAngle + Robot2.Constants.turretAngleOffset;
+        return turretAngle + RobotConstants.TURRET_OFFSET;
     }
 
     // Adjust the robot Pose based on its current movement
@@ -73,105 +66,81 @@ public class Shooter {
         return correctedPose;
     }
 
-    private enum LaunchState {
-        IDLE,
-        SPIN_UP,
-        FEED_FRONT,
-        FEED_BACK,
-        PUSH_NEW_BALL,
-        LAUNCHING,
-        FEED_DOWN,
-    } private LaunchState launchState;
-
-    public void setShotRequests(int num) {
-        this.shotRequests = num;
-    }
-
-    public int getShotRequests() {
-        return this.shotRequests;
-    }
-
-    public void updateAutonShots(Pose robotPose) {
-        // TIMERS and VARIABLES
-        ElapsedTime feedTimer= new ElapsedTime(); // Time feeding
-        ElapsedTime spinUpTimer = new ElapsedTime(); // Time flywheel acceleration
-        boolean shootRightSide = true;
+    // Shoots a specific number of times in auton
+    public void autonShoot(Pose robotPose, int shotRequestCount) {
         double flywheelVel = calculateFlywheelVel(robotPose);
         double turretAngle = calculateTurretAngle(robotPose);
         double hoodAngle = calculateHoodAngle(robotPose);
-        // SEQUENCE
+        for (int i = 0; i < shotRequestCount; i++) {
+            shootSequence(flywheelVel, hoodAngle, turretAngle);
+        }
+    }
 
-        /**
-         * IDLE:
-         * set feeders down
-         * set shooter stuff (flywheel vel, hood and turret angles)
-         * if one already shot, small intake pulse, normal stuff
-         * SPIN UP:
-         * check vel and change state
-         * feeder timer reset
-         * check side to decide whether to go to feed right or left
-         * FEED__:
-         * stop intake
-         * feeder up
-         * feeder timer reset
-         * LAUNCHING:
-         * check if feed had enough time to go up
-         * feeders go down
-         * alternate feed side, alreadyshot++
-         * FEED DOWN:
-         * have enough time to go down
-         * intake can continue
-         */
-        switch (launchState) {
-            case IDLE:
-                spinUpTimer.reset();
-                feeder.downBL();
-                feeder.downFR();
+    // Teleop shooting that allows human adjustment and human feeding
+    public void updateTeleShots(boolean humanFeed, boolean toggleLock, Pose robotPose, boolean flywheelUp, boolean flywheelDown, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight) {
+        boolean shooterLocked = false;
+        double flywheelVel = calculateFlywheelVel(robotPose);
+        double hoodAngle = calculateHoodAngle(robotPose);
+        double turretAngle = calculateTurretAngle(robotPose);
+
+        if (toggleLock) {shooterLocked = !shooterLocked;}
+
+        if (humanFeed) {
+            flywheel.spinTo(RobotConstants.HUMAN_FEED_VEL);
+            hood.turnToAngle(Math.PI/2);
+            turret.turnToRobotAngle(0);
+        }
+        else {
+            if (shooterLocked) { // Locked
+                // Adjustment values
+                double adjustFlywheel = 0;
+                double adjustHood = 0;
+                double adjustTurret = 0;
+                if(flywheelUp) {adjustFlywheel += 5;}
+                if(flywheelDown) {adjustFlywheel -= 5;}
+                if(hoodUp) {adjustHood += 5;}
+                if(hoodDown) {adjustFlywheel -= 5;}
+                if(turretLeft) {adjustTurret += 5;}
+                if(turretRight) {adjustTurret -= 5;}
+
+                flywheel.spinTo(flywheelVel + adjustFlywheel);
+                hood.turnToAngle(hoodAngle + adjustHood);
+                turret.turnToRobotAngle(turretAngle + adjustTurret);
+            }
+            else { // Normal
                 flywheel.spinTo(flywheelVel);
                 hood.turnToAngle(hoodAngle);
                 turret.turnToRobotAngle(turretAngle);
-                if (alreadyShot > 1) { // Push balls to new spots
-                    intake.smallIntake();
-                }
-                launchState = LaunchState.SPIN_UP;
-                break;
-//            case SPIN_UP:
-//                if(flywheel.getVel() > flywheel.getTargetVel() - 50 || spinUpTimer.seconds() > Robot2.Constants.spinUpTimeout) {
-//                    launchState = LaunchState.FEED_FRONT
-//                }
-//                break;
-//            case FEED_FRONT:
-//                intake.pause();
-//                feeder.upFR(); // feeder starts
-//                feederTimer.reset(); // feeder goes down
-//                launchState = Robot2.LaunchState.LAUNCHING;
-//                break;
-//            case FEED_BACK:
-//                intake.pause();
-//                feeder.upBL();
-//                feederTimer.reset();
-//                launchState = Robot2.LaunchState.LAUNCHING;
-//                break;
-//            case LAUNCHING:
-//                if (feederTimer.seconds() > Robot2.Constants.feedTime) {
-//                    launchState = Robot2.LaunchState.FEED_DOWN;
-//                    feeder.downFR();
-//                    feeder.downBL();
-//                    feederTimer.reset();
-//                    shotReqFeederType = !shotReqFeederType;
-//                }
-//                break;
-//            case FEED_DOWN:
-//                if (feederTimer.seconds() > Robot2.Constants.feedDownTime) {
-//                    launchState = Robot2.LaunchState.IDLE;
-//                    feederTimer.reset();
-//                    intake.proceed();
-//                    if (shotReqAlt) chainShotCount++;
-//                }
-//                break;
-        } // --------------------END OF STATE MANAGER--------------------------------
+            }
+        }
     }
 
-    // TODO: add manual adjustment method
-    // TODO: add human feed method
+    public enum LaunchState {
+        IDLE,
+        SPIN_UP,
+        SHOOTING,
+    } private LaunchState launchState;
+
+    // Shooting sequence for one shot
+    public void shootSequence(double flywheelVel, double hoodAngle, double turretAngle) {
+        ElapsedTime spinUpTimer = new ElapsedTime(); // Time flywheel acceleration
+        switch (launchState) {
+            case IDLE:
+                spinUpTimer.reset();
+                flywheel.spinTo(flywheelVel);
+                hood.turnToAngle(hoodAngle);
+                turret.turnToRobotAngle(turretAngle);
+                intakeTransfer.nextArtifact(); // Push balls to new spots
+                launchState = LaunchState.SPIN_UP;
+                break;
+            case SPIN_UP: // Check if flywheel velocity is enough to shoot
+                if(flywheel.getVel() > flywheelVel - 50 || spinUpTimer.seconds() > Robot.Constants.spinUpTimeout) {
+                    launchState = LaunchState.SHOOTING;
+                }
+                break;
+            case SHOOTING:
+                intakeTransfer.shootArtifact(); // Move ball to the flywheel
+                break;
+        }
+    }
 }
