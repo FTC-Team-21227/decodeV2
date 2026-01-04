@@ -21,13 +21,17 @@ import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.paths.PathPoint;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.constants.Constants;
+import org.firstinspires.ftc.teamcode.constants.DynamicPositions;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 
 public class Robot2 {
     private static Robot2 instance = null;
+
     // SUBSYSTEMS
     Robot2.AprilFollower follower;
     Shooter shooter; // Transfer system (intake), flywheel, turret, and hood
@@ -38,7 +42,7 @@ public class Robot2 {
     double lastTime = 0; // Previous time, used to calculate loop time
     ElapsedTime aprilTimer; // Time between aprilTag relocalizations
     int driveSideSign = -1; // Alliance color changes forward vs backwards direction
-    Pose txWorldPinpoint = new Pose(0,0,Math.PI); // Robot pose based on pinpoint in inverted FTC coordinates (not pedro coordinates)
+    Pose txWorldPinpoint = new Pose(0,0,Math.PI); // Stores robot pose based on pinpoint in inverted FTC coordinates (not pedro coordinates)
     Vector robotVel = new Vector(0,0);
     double robotAngVel = 0;
 
@@ -61,6 +65,70 @@ public class Robot2 {
         TELEOP,
         TELEOP_FAR
     } public Robot2.OpModeState opModeState;
+
+
+    // -------------------PUBLIC ROBOT CONSTRUCTOR--------------------------------------------------
+    /**
+     * Creates a robot instance with field-relative position starting at initialPose, and mirrors
+     * shooting position and goal positions based on alliance color
+     * @param initialPose
+     * @param color
+     */
+    public Robot2(Pose initialPose /*in pedro coords*/, Robot2.Color color){
+        // HANDLE ALLIANCE COLOR
+        this.color = color;
+        if (this.color== Robot2.Color.RED) {
+            driveSideSign = -1;
+            DynamicPositions.goalPos = DynamicPositions.goalPos;
+            DynamicPositions.autoShotPose = Constants.autoShotPose;
+            DynamicPositions.autoShotPose_Far = Constants.autoShotPose_Far;
+            DynamicPositions.teleShotPose = Constants.teleShotPose;
+//            RobotPositions.deltaH = RobotConstants.DELTA_H;
+            RobotLog.d("It's Red");
+        }
+        else if (this.color == Robot2.Color.BLUE){
+            driveSideSign = 1;
+            Robot.Positions.goalPos = mirrorVector(Robot.Constants.goalPos);
+            Robot.Positions.autoShotPose = Robot.Constants.autoShotPose.mirror();
+            Robot.Positions.autoShotPose_Far = Robot.Constants.autoShotPose_Far.mirror();
+            Robot.Positions.teleShotPose = Robot.Constants.teleShotPose.mirror();
+//            Robot.Positions.deltaH = Robot.Constants.deltaH;
+            RobotLog.d("It's Blue");
+        }
+        else {
+            RobotLog.d("NO COLOR????");
+        }
+        // Robot's field relative pose, which starts at initialPose
+        txWorldPinpoint = initialPose.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
+//        voltageSensor = new Voltage(hardwareMap.get(VoltageSensor.class,"Control Hub"));
+    }
+
+    // --------------------SINGLETON CONSTRUCTOR AND GETTER-----------------------------------------
+    /**
+     * Create one instance of robot (singleton).
+     * NOTE: ALL DEVICES MUST BE REINITIALIZED BEFORE EVERY OPMODE, THEY ARE NOT SAVED.
+     */
+    // Get singleton instance
+    public static Robot2 getInstance(Pose initialPose, Robot2.Color color){
+        if (instance == null || instance.opModeState == Robot2.OpModeState.TELEOP){
+            RobotLog.d("making a new instance"); // New instance with parameters
+            instance = new Robot2(initialPose, color);
+        }
+        else RobotLog.d("keeping the instance"); // Same instance with same initialPose and color
+        return instance;
+    }
+
+    // Create new instance
+    public static Robot2 startInstance(Pose initialPose, Robot2.Color color){
+        instance = new Robot2(initialPose, color);
+        return instance;
+    }
+
+    // Clear singleton instance
+    public static void clearInstance(){
+        instance = null;
+    }
+
 
 
     // Drives robot field-centric in teleop
@@ -105,7 +173,7 @@ public class Robot2 {
                 if (success) aprilTimer.reset();
                 driveState = Robot2.DriveState.RELATIVE;
                 break;
-            case ABSOLUTE_TELE_RESET:
+            case ABSOLUTE_TELE_RESET: // Reset location against goal at the start of Teleop
                 Pose newPose = handlePose(new Pose(-51.84,51.2636,Math.toRadians(-54.2651)));
                 follower.setPose(newPose);
                 txWorldPinpoint = newPose;
@@ -128,6 +196,7 @@ public class Robot2 {
 
     // Set Teleop Goal Position
     public boolean setTeleGoalPos(){
+        // Use pinpoint location to determine whether robot is close or far from goal
         double x = txWorldPinpoint.getX();
         boolean close = x < 10;
         if (close){

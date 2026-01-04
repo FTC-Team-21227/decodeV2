@@ -2,10 +2,11 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.constants.RobotConstants;
+import org.firstinspires.ftc.teamcode.constants.Constants;
 
 
 public class Shooter {
@@ -13,20 +14,29 @@ public class Shooter {
     private Turret turret;
     private Flywheel flywheel;
     private Intake2 intakeTransfer;
+    private static ShooterSystem shooterSystem;
+
+    // Constructor
+    public Shooter(HardwareMap hardwareMap) {
+        hood = new Hood(hardwareMap);
+        turret = new Turret(hardwareMap);
+        flywheel = new Flywheel(hardwareMap);
+        intakeTransfer = new Intake2(hardwareMap);
+    }
 
     // CONSTANTS
-    public double P = RobotConstants.P; // Fraction of time along trajectory from ground to ground
-    final double DELTA_H = RobotConstants.DELTA_H; // Height difference from shooter to goal
-    final double FLIGHT_TIME = RobotConstants.FLIGHT_TIME; // Ball trajectory time from ground to ground
-    double FLYWHEEL_MIN_VEL = RobotConstants.FLYWHEEL_MIN_VEL;
-    final double FLYWHEEL_RADIUS = RobotConstants.FLYWHEEL_RADIUS;
-    double FLYWHEEL_POWER = RobotConstants.FLYWHEEL_POWER;
-    final double FLYWHEEL_TICKS_PER_REV = RobotConstants.FLYWHEEL_TICKS_PER_REV;
+    public double P = Constants.P; // Fraction of time along trajectory from ground to ground
+    final double DELTA_H = Constants.DELTA_H; // Height difference from shooter to goal
+    final double FLIGHT_TIME = Constants.FLIGHT_TIME; // Ball trajectory time from ground to ground
+    double FLYWHEEL_MIN_VEL = Constants.FLYWHEEL_MIN_VEL;
+    final double FLYWHEEL_RADIUS = Constants.FLYWHEEL_RADIUS;
+    double FLYWHEEL_POWER = Constants.FLYWHEEL_POWER;
+    final double FLYWHEEL_TICKS_PER_REV = Constants.FLYWHEEL_TICKS_PER_REV;
 
     // METHODS
     public Vector getGoalVector(Pose robotPose) {
-        Pose turretPose = robotPose.plus(RobotConstants.turretPos);
-        return RobotConstants.goalPos.minus(turretPose.getAsVector());
+        Pose turretPose = robotPose.plus(Constants.turretPos);
+        return Constants.goalPos.minus(turretPose.getAsVector());
     }
 
     public double calculateFlywheelVel(Pose robotPose) {
@@ -43,7 +53,7 @@ public class Shooter {
         // Calculate angle in radians
         double theta = Math.atan(DELTA_H / (goalDistance * (1 - P))); // Ball launch angle of elevation
         // Add offsets
-        return theta + RobotConstants.HOOD_OFFSET;
+        return theta + Constants.HOOD_OFFSET;
 
     }
 
@@ -52,7 +62,7 @@ public class Shooter {
         // Calculate angle
         double turretAngle = goalVectorAngle - robotPose.getHeading();
         // Add offsets
-        return turretAngle + RobotConstants.TURRET_OFFSET;
+        return turretAngle + Constants.TURRET_OFFSET;
     }
 
     // Adjust the robot Pose based on its current movement
@@ -86,7 +96,7 @@ public class Shooter {
         if (toggleLock) {shooterLocked = !shooterLocked;}
 
         if (humanFeed) {
-            flywheel.spinTo(RobotConstants.HUMAN_FEED_VEL);
+            flywheel.spinTo(Constants.HUMAN_FEED_VEL);
             hood.turnToAngle(Math.PI/2);
             turret.turnToRobotAngle(0);
         }

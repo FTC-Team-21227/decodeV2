@@ -3,7 +3,8 @@ package org.firstinspires.ftc.teamcode.constants;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 
-public class RobotConstants {
+// These will not change throughout game
+public class Constants {
     public static double P = 0.65; // Fraction of time along trajectory from ground to ground
     public static double G = 386.22; // Gravity (in/s^2)
     public final static double DELTA_H = 39; // Height difference from shooter to goal
@@ -17,15 +18,6 @@ public class RobotConstants {
     public static double HOOD_OFFSET = 0;
 
     public final static boolean MINIMIZE_TELEMETRY = false;
-
-    // GOAL POSES
-    public final static Vector goalPos = new Vector(Math.hypot(-58.3727 - 5.3, 55.6425 + 5.3), Math.atan2(55.6425 + 5.3, -58.3727 - 5.3)); //distance to triangle center = 7.5 inch
-    public final static Vector goalPosFar = new Vector(Math.hypot(-70, 55.6425 + 12), Math.atan2(55.6425 + 12, -70)); //distance to triangle center = 7.5 inch
-    // SHOT POSES
-    public final static Pose autoShotPose = new Pose(-43,33, Math.toRadians(90)); //new Pose2d(-12,15,Math.toRadians(90));
-    public final static Pose autoShotPoseFar = new Pose(56,12, Math.toRadians(120));
-    public final static Pose teleShotPose = new Pose(0,0,goalPos.getTheta() + Math.PI);
-    public final static Pose teleShotPoseFar = new Pose(0,0,goalPos.getTheta() + Math.PI);
     // FLYWHEEL
     public final static double spinUpTimeout = 2;
     public final static double kP = 0.052, kI = 0, kD = 0.000, kF = 10 /*kF will be removed in our new version*/, kS = 0.65, kV = 0.00450;
@@ -48,5 +40,20 @@ public class RobotConstants {
     public final static double DRIVE_POWER = 1.0;
     public final static double DRIVE_POWER_TELE = 1.0;
     public final static double DRIVE_POWER_SLOW = 0.2;
+    // INTAKE TRANSFER
+    public static double OUTTAKE_POWER = 1000000; // dummy
+    public static double OUTTAKE_PULSE_TIME = 1000000; // dummy
+    public static double INTAKE_POWER = 100000; // dummy
+    public static double NEXT_ARTIFACT_TIME = 100000; // dummy
+    public static double INTAKE_SHOOT_TIME = 1000000;
 
+    // ------------------------------------POSITIONS------------------------------------------------
+    // GOAL POSES
+    public final static Vector goalPos = new Vector(Math.hypot(-58.3727-5.3,55.6425+5.3), Math.atan2(55.6425+5.3,-58.3727-5.3)); //distance to triangle center = 7.5 inch
+    public final static Vector goalPos_far = new Vector(Math.hypot(-70,55.6425+12), Math.atan2(55.6425+12,-70)); //distance to triangle center = 7.5 inch
+    // SHOT POSES
+    public final static Pose autoShotPose = new Pose(-43,33,Math.toRadians(90)); //new Pose2d(-12,15,Math.toRadians(90));
+    public final static Pose autoShotPose_Far = new Pose(56,12,Math.toRadians(120));
+    public final static Pose teleShotPose = new Pose(0,0,goalPos.getTheta()+Math.PI);
+    public final static Pose teleShotPose_Far = new Pose(0,0,goalPos.getTheta()+Math.PI);
 }
