@@ -43,7 +43,9 @@ public class Intake2 {
 
     public void stop() {INTAKE.setPower(0);}
 
-    public void smallIntake() {intake(Robot2.Constants.slowIntakePower, Robot2.Constants.intakePulseTime);}
+    public void shootArtifact() {intake(Robot2.Constants.powerforthis, Robot2.Constants.timeforthis);}
+
+    public void nextArtifact() {intake(Robot2.Constants.powerforthis, Robot2.Constants.timeforthis);}
 
     public void smallOuttake() {outtake(Robot2.Constants.outtakePower, Robot2.Constants.outtakePulseTime);}
 }
