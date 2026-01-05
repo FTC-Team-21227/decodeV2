@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.Robot2;
+import org.firstinspires.ftc.teamcode.constants.Constants;
 
 import java.util.concurrent.TimeUnit;
 
@@ -43,9 +43,9 @@ public class Intake2 {
 
     public void stop() {INTAKE.setPower(0);}
 
-    public void shootArtifact() {}//intake(Robot2.Constants.powerforthis, Robot2.Constants.timeforthis);}
+    public void shootArtifact() {intake(Constants.INTAKE_POWER, Constants.INTAKE_SHOOT_TIME);}
 
-    public void nextArtifact() {}//intake(Robot2.Constants.powerforthis, Robot2.Constants.timeforthis);}
+    public void nextArtifact() {intake(Constants.INTAKE_POWER, Constants.NEXT_ARTIFACT_TIME);}
 
-    public void smallOuttake() {}//outtake(Robot2.Constants.outtakePower, Robot2.Constants.outtakePulseTime);}
+    public void smallOuttake() {outtake(Constants.OUTTAKE_POWER, Constants.OUTTAKE_PULSE_TIME);}
 }

@@ -1,19 +1,20 @@
-package org.firstinspires.ftc.teamcode; // make sure this aligns with class location
+package org.firstinspires.ftc.teamcode.autons; // make sure this aligns with class location
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "Auto groove")
-public class AutoMove extends OpMode {
+@Autonomous(name = "Example Auto")
+public class ExampleAuto extends OpMode {
+    private Robot robot;
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
 
@@ -21,14 +22,13 @@ public class AutoMove extends OpMode {
 
     private final Pose startPose = new Pose(28.5, 128, Math.toRadians(180)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(60, 85, Math.toRadians(135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pickup1Pose = new Pose(20, 75, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(20, 50, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickup3Pose = new Pose(20, 27, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private final Pose pickup3Pose = new Pose(49, 135, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
 
     private Path scorePreload;
     private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3;
 
-    boolean reset = true;
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePose));
@@ -38,12 +38,8 @@ public class AutoMove extends OpMode {
     scorePreload.setConstantInterpolation(startPose.getHeading()); */
 
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-//        grabPickup1 = follower.pathBuilder()
-//                .addPath(new BezierLine(scorePose, pickup1Pose))
-//                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
-//                .build();
         grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60,75,Math.toRadians(180)), pickup1Pose))
+                .addPath(new BezierLine(scorePose, pickup1Pose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
                 .build();
 
@@ -54,12 +50,8 @@ public class AutoMove extends OpMode {
                 .build();
 
         /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-//        grabPickup2 = follower.pathBuilder()
-//                .addPath(new BezierLine(scorePose, pickup2Pose))
-//                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
-//                .build();
         grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60,50,Math.toRadians(180)), pickup2Pose))
+                .addPath(new BezierLine(scorePose, pickup2Pose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
                 .build();
 
@@ -70,12 +62,8 @@ public class AutoMove extends OpMode {
                 .build();
 
         /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-//        grabPickup3 = follower.pathBuilder()
-//                .addPath(new BezierLine(scorePose, pickup3Pose))
-//                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
-//                .build();
         grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60,27,Math.toRadians(180)), pickup3Pose))
+                .addPath(new BezierLine(scorePose, pickup3Pose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
                 .build();
 
@@ -187,6 +175,7 @@ public class AutoMove extends OpMode {
         follower.update();
         autonomousPathUpdate();
         //autonomousSubsystemsUpdate();
+//        robot.updateShooter(true, true,true,telemetry,true,new Pose(0,0,0),0,true,true,true,true,true,true,true,true,true,true,true);
         // Feedback to Driver Hub for debugging
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
@@ -204,6 +193,7 @@ public class AutoMove extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+        robot = new Robot(new Pose(0,0,0), Robot.Color.RED);
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);

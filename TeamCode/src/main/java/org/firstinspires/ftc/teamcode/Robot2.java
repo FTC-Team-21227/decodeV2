@@ -21,26 +21,28 @@ import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.paths.PathPoint;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.subsystems.Intake2;
+import org.firstinspires.ftc.teamcode.constants.Constants;
+import org.firstinspires.ftc.teamcode.constants.DynamicPositions;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 
 public class Robot2 {
     private static Robot2 instance = null;
+
     // SUBSYSTEMS
     Robot2.AprilFollower follower;
     Shooter shooter; // Transfer system (intake), flywheel, turret, and hood
     Limelight limelight; // Limelight subsystem used in AprilDrive and Obelisk detection
-    Intake2 intakeTransfer;
 
 
     // ATTRIBUTES
     double lastTime = 0; // Previous time, used to calculate loop time
     ElapsedTime aprilTimer; // Time between aprilTag relocalizations
     int driveSideSign = -1; // Alliance color changes forward vs backwards direction
-    Pose txWorldPinpoint = new Pose(0,0,Math.PI); // Robot pose based on pinpoint in inverted FTC coordinates (not pedro coordinates)
+    Pose txWorldPinpoint = new Pose(0,0,Math.PI); // Stores robot pose based on pinpoint in inverted FTC coordinates (not pedro coordinates)
     Vector robotVel = new Vector(0,0);
     double robotAngVel = 0;
 
@@ -51,12 +53,6 @@ public class Robot2 {
         ABSOLUTE, // Drive with AprilTag localization for absolute position on field
         ABSOLUTE_TELE_RESET
     } private Robot2.DriveState driveState;
-
-    private enum LaunchState {
-        IDLE,
-        SPIN_UP,
-        SHOOTING,
-    } private LaunchState launchState; // Instance
 
     public enum Color { // Enum that stores the alliance color, accessible globally
         RED,
@@ -69,6 +65,70 @@ public class Robot2 {
         TELEOP,
         TELEOP_FAR
     } public Robot2.OpModeState opModeState;
+
+
+    // -------------------PUBLIC ROBOT CONSTRUCTOR--------------------------------------------------
+    /**
+     * Creates a robot instance with field-relative position starting at initialPose, and mirrors
+     * shooting position and goal positions based on alliance color
+     * @param initialPose
+     * @param color
+     */
+    public Robot2(Pose initialPose /*in pedro coords*/, Robot2.Color color){
+        // HANDLE ALLIANCE COLOR
+        this.color = color;
+        if (this.color== Robot2.Color.RED) {
+            driveSideSign = -1;
+            DynamicPositions.goalPos = DynamicPositions.goalPos;
+            DynamicPositions.autoShotPose = Constants.autoShotPose;
+            DynamicPositions.autoShotPose_Far = Constants.autoShotPose_Far;
+            DynamicPositions.teleShotPose = Constants.teleShotPose;
+//            RobotPositions.deltaH = RobotConstants.DELTA_H;
+            RobotLog.d("It's Red");
+        }
+        else if (this.color == Robot2.Color.BLUE){
+            driveSideSign = 1;
+            Robot.Positions.goalPos = mirrorVector(Robot.Constants.goalPos);
+            Robot.Positions.autoShotPose = Robot.Constants.autoShotPose.mirror();
+            Robot.Positions.autoShotPose_Far = Robot.Constants.autoShotPose_Far.mirror();
+            Robot.Positions.teleShotPose = Robot.Constants.teleShotPose.mirror();
+//            Robot.Positions.deltaH = Robot.Constants.deltaH;
+            RobotLog.d("It's Blue");
+        }
+        else {
+            RobotLog.d("NO COLOR????");
+        }
+        // Robot's field relative pose, which starts at initialPose
+        txWorldPinpoint = initialPose.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
+//        voltageSensor = new Voltage(hardwareMap.get(VoltageSensor.class,"Control Hub"));
+    }
+
+    // --------------------SINGLETON CONSTRUCTOR AND GETTER-----------------------------------------
+    /**
+     * Create one instance of robot (singleton).
+     * NOTE: ALL DEVICES MUST BE REINITIALIZED BEFORE EVERY OPMODE, THEY ARE NOT SAVED.
+     */
+    // Get singleton instance
+    public static Robot2 getInstance(Pose initialPose, Robot2.Color color){
+        if (instance == null || instance.opModeState == Robot2.OpModeState.TELEOP){
+            RobotLog.d("making a new instance"); // New instance with parameters
+            instance = new Robot2(initialPose, color);
+        }
+        else RobotLog.d("keeping the instance"); // Same instance with same initialPose and color
+        return instance;
+    }
+
+    // Create new instance
+    public static Robot2 startInstance(Pose initialPose, Robot2.Color color){
+        instance = new Robot2(initialPose, color);
+        return instance;
+    }
+
+    // Clear singleton instance
+    public static void clearInstance(){
+        instance = null;
+    }
+
 
 
     // Drives robot field-centric in teleop
@@ -113,7 +173,7 @@ public class Robot2 {
                 if (success) aprilTimer.reset();
                 driveState = Robot2.DriveState.RELATIVE;
                 break;
-            case ABSOLUTE_TELE_RESET:
+            case ABSOLUTE_TELE_RESET: // Reset location against goal at the start of Teleop
                 Pose newPose = handlePose(new Pose(-51.84,51.2636,Math.toRadians(-54.2651)));
                 follower.setPose(newPose);
                 txWorldPinpoint = newPose;
@@ -136,6 +196,7 @@ public class Robot2 {
 
     // Set Teleop Goal Position
     public boolean setTeleGoalPos(){
+        // Use pinpoint location to determine whether robot is close or far from goal
         double x = txWorldPinpoint.getX();
         boolean close = x < 10;
         if (close){
@@ -187,475 +248,442 @@ public class Robot2 {
         }
     }
 
-    // Shooting sequence for one shot
-    public void shootSequence(double flywheelVel, double hoodAngle, double turretAngle) {
-        ElapsedTime spinUpTimer = new ElapsedTime(); // Time flywheel acceleration
-        switch (launchState) {
-            case IDLE:
-                spinUpTimer.reset();
-                intakeTransfer.nextArtifact(); // Push balls to new spots
-                launchState = LaunchState.SPIN_UP;
-                break;
-            case SPIN_UP: // Check if flywheel velocity is enough to shoot
-                if(shooter.flywheel.getVel() > flywheelVel - 50 || spinUpTimer.seconds() > Robot.Constants.spinUpTimeout) {
-                    launchState = LaunchState.SHOOTING;
-                }
-                break;
-            case SHOOTING:
-                intakeTransfer.shootArtifact(); // Move ball to the flywheel
-                break;
-        }
-    }
-
 
     // -------------------------APRIL TAG DRIVETRAIN CLASS OF ROBOT---------------------------------
     // Resets localizer using AprilTags. Extends Pedropathing Follower class.
     public class AprilFollower{
-        private final Follower base;
+        private final Follower robotBase;
+        public AprilFollower(Follower robotBase) {
+            this.robotBase = robotBase;
+        } // Constructor
 
-        public AprilFollower(Follower base) {
-            this.base = base;
-        }
+        public void updateConstants() {robotBase.updateConstants();}
 
-        public void updateConstants() {
-            base.updateConstants();
-        }
+        public void followPath(Path path, boolean holdEnd) {robotBase.followPath(path, holdEnd);}
 
-        public void followPath(Path path, boolean holdEnd) {
-            base.followPath(path, holdEnd);
-        }
-
-        public void startTeleOpDrive(boolean useBrakeMode) {
-            base.startTeleOpDrive(useBrakeMode);
-        }
+        public void startTeleOpDrive(boolean useBrakeMode) {robotBase.startTeleOpDrive(useBrakeMode);}
 
         public void updatePose() {
-            base.updatePose();
+            robotBase.updatePose();
         }
 
-        public Vector getCentripetalForceCorrection() {
-            return base.getCentripetalForceCorrection();
-        }
+        public Vector getCentripetalForceCorrection() {return robotBase.getCentripetalForceCorrection();}
 
         public void activateAllPIDFs() {
-            base.activateAllPIDFs();
+            robotBase.activateAllPIDFs();
         }
 
         public void setMaxPower(double set) {
-            base.setMaxPower(set);
+            robotBase.setMaxPower(set);
         }
 
-        public void followPath(PathChain pathChain, boolean holdEnd) {
-            base.followPath(pathChain, holdEnd);
-        }
+        public void followPath(PathChain pathChain, boolean holdEnd) {robotBase.followPath(pathChain, holdEnd);}
 
-        public boolean atPose(Pose pose, double xTolerance, double yTolerance) {
-            return base.atPose(pose, xTolerance, yTolerance);
-        }
+        public boolean atPose(Pose pose, double xTolerance, double yTolerance) {return robotBase.atPose(pose, xTolerance, yTolerance);}
 
         public double getHeadingGoal(double t) {
-            return base.getHeadingGoal(t);
+            return robotBase.getHeadingGoal(t);
         }
 
         public Path getCurrentPath() {
-            return base.getCurrentPath();
+            return robotBase.getCurrentPath();
         }
 
         public String[] debug() {
-            return base.debug();
+            return robotBase.debug();
         }
 
         public void setTeleOpDrive(double forward, double strafe, double turn, boolean isRobotCentric, double offsetHeading) {
-            base.setTeleOpDrive(forward, strafe, turn, isRobotCentric, offsetHeading);
+            robotBase.setTeleOpDrive(forward, strafe, turn, isRobotCentric, offsetHeading);
         }
 
         public PathChain getCurrentPathChain() {
-            return base.getCurrentPathChain();
+            return robotBase.getCurrentPathChain();
         }
 
         public void setDrivePIDFCoefficients(FilteredPIDFCoefficients drivePIDFCoefficients) {
-            base.setDrivePIDFCoefficients(drivePIDFCoefficients);
+            robotBase.setDrivePIDFCoefficients(drivePIDFCoefficients);
         }
 
         public void activateCentripetal() {
-            base.activateCentripetal();
+            robotBase.activateCentripetal();
         }
 
         public Vector getTeleopDriveVector() {
-            return base.getTeleopDriveVector();
+            return robotBase.getTeleopDriveVector();
         }
 
         public VectorCalculator getVectorCalculator() {
-            return base.getVectorCalculator();
+            return robotBase.getVectorCalculator();
         }
 
         public void followPath(PathChain pathChain) {
-            base.followPath(pathChain);
+            robotBase.followPath(pathChain);
         }
 
         public void updateCallbacks() {
-            base.updateCallbacks();
+            robotBase.updateCallbacks();
         }
 
         public boolean isRobotStuck() {
-            return base.isRobotStuck();
+            return robotBase.isRobotStuck();
         }
 
         public Vector getDriveVector() {
-            return base.getDriveVector();
+            return robotBase.getDriveVector();
         }
 
         public void holdPoint(BezierPoint point, double heading) {
-            base.holdPoint(point, heading);
+            robotBase.holdPoint(point, heading);
         }
 
         public void setTeleOpDrive(double forward, double strafe, double turn) {
-            base.setTeleOpDrive(forward, strafe, turn);
+            robotBase.setTeleOpDrive(forward, strafe, turn);
         }
 
         public boolean getUseTranslational() {
-            return base.getUseTranslational();
+            return robotBase.getUseTranslational();
         }
 
         public void setSecondaryHeadingPIDFCoefficients(PIDFCoefficients secondaryHeadingPIDFCoefficients) {
-            base.setSecondaryHeadingPIDFCoefficients(secondaryHeadingPIDFCoefficients);
+            robotBase.setSecondaryHeadingPIDFCoefficients(secondaryHeadingPIDFCoefficients);
         }
 
         public void startTeleopDrive() {
-            base.startTeleopDrive();
+            robotBase.startTeleopDrive();
         }
 
         public boolean atParametricEnd() {
-            return base.atParametricEnd();
+            return robotBase.atParametricEnd();
         }
 
         public boolean atPose(Pose pose, double xTolerance, double yTolerance, double headingTolerance) {
-            return base.atPose(pose, xTolerance, yTolerance, headingTolerance);
+            return robotBase.atPose(pose, xTolerance, yTolerance, headingTolerance);
         }
 
         public Vector getClosestPointTangentVector() {
-            return base.getClosestPointTangentVector();
+            return robotBase.getClosestPointTangentVector();
         }
 
         public int getChainIndex() {
-            return base.getChainIndex();
+            return robotBase.getChainIndex();
         }
 
         public void updateDrivetrain() {
-            base.updateDrivetrain();
+            robotBase.updateDrivetrain();
         }
 
         public Pose getPointFromPath(double t) {
-            return base.getPointFromPath(t);
+            return robotBase.getPointFromPath(t);
         }
 
         public PathBuilder pathBuilder(PathConstraints constraints) {
-            return base.pathBuilder(constraints);
+            return robotBase.pathBuilder(constraints);
         }
 
         public void setSecondaryDrivePIDFCoefficients(FilteredPIDFCoefficients secondaryDrivePIDFCoefficients) {
-            base.setSecondaryDrivePIDFCoefficients(secondaryDrivePIDFCoefficients);
+            robotBase.setSecondaryDrivePIDFCoefficients(secondaryDrivePIDFCoefficients);
         }
 
         public void updateErrorAndVectors() {
-            base.updateErrorAndVectors();
+            robotBase.updateErrorAndVectors();
         }
 
         public double getDistanceRemaining() {
-            return base.getDistanceRemaining();
+            return robotBase.getDistanceRemaining();
         }
 
         public void startTeleOpDrive() {
-            base.startTeleOpDrive();
+            robotBase.startTeleOpDrive();
         }
 
         public double getTotalHeading() {
-            return base.getTotalHeading();
+            return robotBase.getTotalHeading();
         }
 
         public Vector getTranslationalCorrection() {
-            return base.getTranslationalCorrection();
+            return robotBase.getTranslationalCorrection();
         }
 
         public ErrorCalculator getErrorCalculator() {
-            return base.getErrorCalculator();
+            return robotBase.getErrorCalculator();
         }
 
         public void followPath(PathChain pathChain, double maxPower, boolean holdEnd) {
-            base.followPath(pathChain, maxPower, holdEnd);
+            robotBase.followPath(pathChain, maxPower, holdEnd);
         }
 
         public double getDriveError() {
-            return base.getDriveError();
+            return robotBase.getDriveError();
         }
 
         public Vector getTeleopHeadingVector() {
-            return base.getTeleopHeadingVector();
+            return robotBase.getTeleopHeadingVector();
         }
 
         public void update() {
-            base.update();
+            robotBase.update();
         }
 
         public void pausePathFollowing() {
-            base.pausePathFollowing();
+            robotBase.pausePathFollowing();
         }
 
         public boolean getUseHeading() {
-            return base.getUseHeading();
+            return robotBase.getUseHeading();
         }
 
         public void setTranslationalPIDFCoefficients(PIDFCoefficients translationalPIDFCoefficients) {
-            base.setTranslationalPIDFCoefficients(translationalPIDFCoefficients);
+            robotBase.setTranslationalPIDFCoefficients(translationalPIDFCoefficients);
         }
 
         public PathPoint getClosestPose() {
-            return base.getClosestPose();
+            return robotBase.getClosestPose();
         }
 
         public void setTeleOpDrive(double forward, double strafe, double turn, boolean isRobotCentric) {
-            base.setTeleOpDrive(forward, strafe, turn, isRobotCentric);
+            robotBase.setTeleOpDrive(forward, strafe, turn, isRobotCentric);
         }
 
         public void turnTo(double radians) {
-            base.turnTo(radians);
+            robotBase.turnTo(radians);
         }
 
         public void activateTranslational() {
-            base.activateTranslational();
+            robotBase.activateTranslational();
         }
 
         public boolean isTurning() {
-            return base.isTurning();
+            return robotBase.isTurning();
         }
 
         public double getCurrentPathNumber() {
-            return base.getCurrentPathNumber();
+            return robotBase.getCurrentPathNumber();
         }
 
         public boolean getTeleopDrive() {
-            return base.getTeleopDrive();
+            return robotBase.getTeleopDrive();
         }
 
         public PathPoint getPreviousClosestPose() {
-            return base.getPreviousClosestPose();
+            return robotBase.getPreviousClosestPose();
         }
 
         public FollowerConstants getConstants() {
-            return base.getConstants();
+            return robotBase.getConstants();
         }
 
         public void setHeadingPIDFCoefficients(PIDFCoefficients headingPIDFCoefficients) {
-            base.setHeadingPIDFCoefficients(headingPIDFCoefficients);
+            robotBase.setHeadingPIDFCoefficients(headingPIDFCoefficients);
         }
 
         public void setXVelocity(double vel) {
-            base.setXVelocity(vel);
+            robotBase.setXVelocity(vel);
         }
 
         public void updateVectors() {
-            base.updateVectors();
+            robotBase.updateVectors();
         }
 
         public double getCentripetalScaling() {
-            return base.getCentripetalScaling();
+            return robotBase.getCentripetalScaling();
         }
 
         public Vector getHeadingVector() {
-            return base.getHeadingVector();
+            return robotBase.getHeadingVector();
         }
 
         public void setPose(Pose pose) {
-            base.setPose(pose);
+            robotBase.setPose(pose);
         }
 
         public PathBuilder pathBuilder() {
-            return base.pathBuilder();
+            return robotBase.pathBuilder();
         }
 
         public double getClosestPointHeadingGoal() {
-            return base.getClosestPointHeadingGoal();
+            return robotBase.getClosestPointHeadingGoal();
         }
 
         public double getAngularVelocity() {
-            return base.getAngularVelocity();
+            return robotBase.getAngularVelocity();
         }
 
         public void setSecondaryTranslationalPIDFCoefficients(PIDFCoefficients secondaryTranslationalPIDFCoefficients) {
-            base.setSecondaryTranslationalPIDFCoefficients(secondaryTranslationalPIDFCoefficients);
+            robotBase.setSecondaryTranslationalPIDFCoefficients(secondaryTranslationalPIDFCoefficients);
         }
 
         public void turn(double radians, boolean isLeft) {
-            base.turn(radians, isLeft);
+            robotBase.turn(radians, isLeft);
         }
 
         public Vector getTranslationalError() {
-            return base.getTranslationalError();
+            return robotBase.getTranslationalError();
         }
 
         public void setTeleOpDrive(double forward, double strafe, double turn, double offsetHeading) {
-            base.setTeleOpDrive(forward, strafe, turn, offsetHeading);
+            robotBase.setTeleOpDrive(forward, strafe, turn, offsetHeading);
         }
 
         public void setMaxPowerScaling(double maxPowerScaling) {
-            base.setMaxPowerScaling(maxPowerScaling);
+            robotBase.setMaxPowerScaling(maxPowerScaling);
         }
 
         public double getPathCompletion() {
-            return base.getPathCompletion();
+            return robotBase.getPathCompletion();
         }
 
         public void setStartingPose(Pose pose) {
-            base.setStartingPose(pose);
+            robotBase.setStartingPose(pose);
         }
 
         public boolean isTeleopDrive() {
-            return base.isTeleopDrive();
+            return robotBase.isTeleopDrive();
         }
 
         public void setConstraints(PathConstraints pathConstraints) {
-            base.setConstraints(pathConstraints);
+            robotBase.setConstraints(pathConstraints);
         }
 
         public double getHeading() {
-            return base.getHeading();
+            return robotBase.getHeading();
         }
 
         public void turnToDegrees(double degrees) {
-            base.turnToDegrees(degrees);
+            robotBase.turnToDegrees(degrees);
         }
 
         public void activateHeading() {
-            base.activateHeading();
+            robotBase.activateHeading();
         }
 
         public void resumePathFollowing() {
-            base.resumePathFollowing();
+            robotBase.resumePathFollowing();
         }
 
         public boolean isBusy() {
-            return base.isBusy();
+            return robotBase.isBusy();
         }
 
         public boolean getUseDrive() {
-            return base.getUseDrive();
+            return robotBase.getUseDrive();
         }
 
         public PoseTracker getPoseTracker() {
-            return base.getPoseTracker();
+            return robotBase.getPoseTracker();
         }
 
         public PathConstraints getConstraints() {
-            return base.getConstraints();
+            return robotBase.getConstraints();
         }
 
         public void setCentripetalScaling(double set) {
-            base.setCentripetalScaling(set);
+            robotBase.setCentripetalScaling(set);
         }
 
         public void startTeleopDrive(boolean useBrakeMode) {
-            base.startTeleopDrive(useBrakeMode);
+            robotBase.startTeleopDrive(useBrakeMode);
         }
 
         public void holdPoint(Pose pose) {
-            base.holdPoint(pose);
+            robotBase.holdPoint(pose);
         }
 
         public double getCurrentTValue() {
-            return base.getCurrentTValue();
+            return robotBase.getCurrentTValue();
         }
 
         public boolean getUseCentripetal() {
-            return base.getUseCentripetal();
+            return robotBase.getUseCentripetal();
         }
 
         public void turnDegrees(double degrees, boolean isLeft) {
-            base.turnDegrees(degrees, isLeft);
+            robotBase.turnDegrees(degrees, isLeft);
         }
 
         public void deactivateAllPIDFs() {
-            base.deactivateAllPIDFs();
+            robotBase.deactivateAllPIDFs();
         }
 
         public Vector getCorrectiveVector() {
-            return base.getCorrectiveVector();
+            return robotBase.getCorrectiveVector();
         }
 
         public Pose getPose() {
-            return base.getPose();
+            return robotBase.getPose();
         }
 
         public boolean getFollowingPathChain() {
-            return base.getFollowingPathChain();
+            return robotBase.getFollowingPathChain();
         }
 
         public void setYVelocity(double vel) {
-            base.setYVelocity(vel);
+            robotBase.setYVelocity(vel);
         }
 
         public Vector getAcceleration() {
-            return base.getAcceleration();
+            return robotBase.getAcceleration();
         }
 
         public void followPath(Path path) {
-            base.followPath(path);
+            robotBase.followPath(path);
         }
 
         public void updateErrors() {
-            base.updateErrors();
+            robotBase.updateErrors();
         }
 
         public void breakFollowing() {
-            base.breakFollowing();
+            robotBase.breakFollowing();
         }
 
         public double getMaxPowerScaling() {
-            return base.getMaxPowerScaling();
+            return robotBase.getMaxPowerScaling();
         }
 
         public double getDistanceTraveledOnPath() {
-            return base.getDistanceTraveledOnPath();
+            return robotBase.getDistanceTraveledOnPath();
         }
 
         public void holdPoint(BezierPoint point, double heading, boolean useHoldScaling) {
-            base.holdPoint(point, heading, useHoldScaling);
+            robotBase.holdPoint(point, heading, useHoldScaling);
         }
 
         public boolean isLocalizationNAN() {
-            return base.isLocalizationNAN();
+            return robotBase.isLocalizationNAN();
         }
 
         public Vector getVelocity() {
-            return base.getVelocity();
+            return robotBase.getVelocity();
         }
 
         public void setConstants(FollowerConstants constants) {
-            base.setConstants(constants);
+            robotBase.setConstants(constants);
         }
 
         public PoseHistory getPoseHistory() {
-            return base.getPoseHistory();
+            return robotBase.getPoseHistory();
         }
 
         public void activateDrive() {
-            base.activateDrive();
+            robotBase.activateDrive();
         }
 
         public Drivetrain getDrivetrain() {
-            return base.getDrivetrain();
+            return robotBase.getDrivetrain();
         }
 
         public double getHeadingError() {
-            return base.getHeadingError();
+            return robotBase.getHeadingError();
         }
 
         // --------------------AprilTag Re-localization Method--------------------------------
         @SuppressLint("DefaultLocale")
         public boolean relocalize(Telemetry telemetry) {
             // Update the pinpoint velocity estimate as normal
-            base.updatePose();
-            robotVel = base.getVelocity();
-            robotAngVel = base.getAngularVelocity();
+            robotBase.updatePose();
+            robotVel = robotBase.getVelocity();
+            robotAngVel = robotBase.getAngularVelocity();
             Vector vel = robotVel;
             double angVel = robotAngVel;
 
@@ -678,7 +706,7 @@ public class Robot2 {
             Pose poseWorldRobot = poseWorldTurret/*.times(turret.getPoseRobotTurret().inverse())*/;
 
             // Set the localizer pose to the current field-relative pose based on AprilTag reading.
-            base.setPose(poseWorldRobot);
+            robotBase.setPose(poseWorldRobot);
 
             // Telemetry displays robot position and heading information
             telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
