@@ -25,7 +25,7 @@ public class Intake2 {
 
     public void intake(double k) {INTAKE.setPower(k * Robot.Constants.intakePower);}
 
-    public void intake(double k, double runTime) {
+    public void intake(double k, double runTime) { //these won't work because the loop will get stuck inside
         timer.reset();
         while (timer.time(TimeUnit.SECONDS) < runTime) {intake(k);}
         stop();
@@ -43,9 +43,9 @@ public class Intake2 {
 
     public void stop() {INTAKE.setPower(0);}
 
-    public void shootArtifact() {intake(Robot2.Constants.powerforthis, Robot2.Constants.timeforthis);}
+    public void shootArtifact() {}//intake(Robot2.Constants.powerforthis, Robot2.Constants.timeforthis);}
 
-    public void nextArtifact() {intake(Robot2.Constants.powerforthis, Robot2.Constants.timeforthis);}
+    public void nextArtifact() {}//intake(Robot2.Constants.powerforthis, Robot2.Constants.timeforthis);}
 
-    public void smallOuttake() {outtake(Robot2.Constants.outtakePower, Robot2.Constants.outtakePulseTime);}
+    public void smallOuttake() {}//outtake(Robot2.Constants.outtakePower, Robot2.Constants.outtakePulseTime);}
 }

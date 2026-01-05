@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.tuning;
 
 import android.annotation.SuppressLint;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -93,7 +95,7 @@ public class AxonTurretTest {
         pidTimer = new ElapsedTime();
         pidTimer.reset();
 
-        maxPower = 0.3;
+        maxPower = 1;
         cliffs = 0;
         startupPhase = true;
         startupTimer.reset();
@@ -117,6 +119,7 @@ public class AxonTurretTest {
     public void setKD(double kD) { this.kD = kD; }
     public double getKP() { return kP; }
     public double getKI() { return kI; }
+    public double getKD() { return kD; }
     public void changeTargetRotation(double change) { targetRotation += change; }
     public void setTargetRotation(double target) { targetRotation = target; resetPID(); }
     public boolean isAtTarget(double tolerance) { return Math.abs(targetRotation - totalRotation) < tolerance; }
@@ -135,7 +138,8 @@ public class AxonTurretTest {
     public synchronized void update() {
         // low pass filter
         double rawAngle = getCurrentAngle();
-        double currentAngle = ALPHA * rawAngle + (1 - ALPHA) * previousAngle;
+//        double currentAngle = ALPHA * rawAngle + (1 - ALPHA) * previousAngle;
+        double currentAngle = rawAngle;
 
         // multiple turns
         double angleDifference = currentAngle - previousAngle;
@@ -189,7 +193,7 @@ public class AxonTurretTest {
                         "Total Rotation: %.2f\n" +
                         "Target Rotation: %.2f\n" +
                         "Current Power: %.3f\n" +
-                        "PID Values: P=%.3f I=%.3f D=%.3f\n" +
+                        "PID Values: P=%.3f I=%.4f D=%.4f\n" +
                         "PID Terms: Error=%.2f Integral=%.2f",
                 servoEncoder.getVoltage(),
                 getCurrentAngle(),
@@ -208,7 +212,7 @@ public class AxonTurretTest {
 
         @Override
         public void runOpMode() throws InterruptedException {
-//            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
             CRServo crservo = hardwareMap.crservo.get("servorot");
             AnalogInput encoder = hardwareMap.get(AnalogInput.class, "axonAnalog");
             AxonTurretTest servo = new AxonTurretTest(crservo, encoder);
@@ -221,10 +225,13 @@ public class AxonTurretTest {
             boolean lastRightBumper = false;
             boolean lastLeftBumper = false;
             boolean lastB = false;
+            boolean lastDpadLeft = false;
+            boolean lastDpadRight = false;
 
             waitForStart();
 
             while (!isStopRequested()) {
+//                crservo.setPower(-1);
                 servo.update();
 
                 // Button handling
@@ -236,19 +243,31 @@ public class AxonTurretTest {
                 boolean currRightBumper = gamepad1.right_bumper;
                 boolean currLeftBumper = gamepad1.left_bumper;
                 boolean currB = gamepad1.b;
+                boolean currDpadLeft = gamepad1.dpad_left;
+                boolean currDpadRight = gamepad1.dpad_right;
+                boolean currRStickButton = gamepad1.right_stick_button;
+                boolean currLStickButton = gamepad1.left_stick_button;
 
                 if (currDpadUp && !lastDpadUp) servo.changeTargetRotation(90);
                 if (currDpadDown && !lastDpadDown) servo.changeTargetRotation(-90);
+                if (currDpadLeft && !lastDpadLeft) servo.changeTargetRotation(30);
+                if (currDpadRight && !lastDpadRight) servo.changeTargetRotation(-30);
+                if (currRStickButton) servo.changeTargetRotation(1);
+                if (currLStickButton) servo.changeTargetRotation(-1);
                 if (currX && !lastX) servo.setTargetRotation(0);
                 if (currY && !lastY) servo.setKP(servo.getKP() + 0.001);
                 if (currA && !lastA) servo.setKP(Math.max(0, servo.getKP() - 0.001));
-                if (currRightBumper && !lastRightBumper) servo.setKI(servo.getKI() + 0.0001);
-                if (currLeftBumper && !lastLeftBumper) servo.setKI(Math.max(0, servo.getKI() - 0.0001));
+                if (currRightBumper && !lastRightBumper) servo.setKD(servo.getKD() + 0.0001);
+                if (currLeftBumper && !lastLeftBumper) servo.setKD(Math.max(0, servo.getKD() - 0.0001));
                 if (currB && !lastB) {
                     servo.setKP(0.015);
                     servo.setKI(0.0005);
                     servo.setKD(0.0025);
                     servo.resetPID();
+                }
+                if (gamepad1.backWasPressed()){
+                    servo.rtp = false;
+                    servo.setPower(1);
                 }
 
                 lastDpadUp = currDpadUp;
@@ -259,10 +278,17 @@ public class AxonTurretTest {
                 lastRightBumper = currRightBumper;
                 lastLeftBumper = currLeftBumper;
                 lastB = currB;
+                lastDpadLeft = currDpadLeft;
+                lastDpadRight = currDpadRight;
 
                 telemetry.addData("Starting angle", servo.STARTPOS);
                 telemetry.addLine(servo.log());
+                telemetry.addData("current angle", servo.getCurrentAngle());
+                telemetry.addData("total rotation", servo.totalRotation);
+                telemetry.addData("target rotation", servo.targetRotation);
+                telemetry.addData("power", servo.power);
                 telemetry.addData("NTRY", servo.ntry);
+                telemetry.addData("cliffs", servo.cliffs);
                 telemetry.addData("Voltage", encoder.getVoltage());
                 telemetry.update();
             }

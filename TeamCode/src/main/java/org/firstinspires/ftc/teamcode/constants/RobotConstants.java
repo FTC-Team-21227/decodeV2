@@ -13,7 +13,7 @@ public class RobotConstants {
     public final static double FLYWHEEL_RADIUS = 1.89;
     public static double FLYWHEEL_POWER = 2.32;
     public final static double FLYWHEEL_TICKS_PER_REV = 28;
-    public static double HUMAN_FEED_VEL = -676767;
+    public static double HUMAN_FEED_VEL = -676767; //brooooooooo
     public static double HOOD_OFFSET = 0;
 
     public final static boolean MINIMIZE_TELEMETRY = false;
@@ -42,11 +42,22 @@ public class RobotConstants {
     //        public final static double turretTargetRangeOffset = TURRET_HIGH_ANGLE-Math.PI; //offset from (-pi,pi)
     // Offset from (-pi,pi) to (midpoint-pi, midpoint+pi), i.e. shift midpoint from 0 to new midpoint
     public final static double turretTargetRangeOffset = Math.PI/2; //(TURRET_LOW_ANGLE + TURRET_HIGH_ANGLE )/2.0; //TURRET_HIGH_ANGLE-Math.PI;
-    public final static double TURRET_SCALE_0 = 0.33055555555555555; //0.218; //0; //0.25 ;//0; //0.11;
+    public final static double TURRET_SCALE_0 = 0.33055555555555555; //0.218; //0; //0.25 ;//0; //0.11; //instead of 0-1 this will end up being 0-360
     public final static double TURRET_SCALE_1 = 0.7838888888888889; //0.67; //1; //0.78; //0.86; //1;
+    public final static double TURRET_CLIP_0 = 0;
+    public final static double TURRET_CLIP_0_TELE = TURRET_SCALE_0;
+    public final static double TURRET_CLIP_1 = 0.8;
+    public final static double TURRET_CLIP_1_TELE = TURRET_SCALE_1;
+
+    // INTAKE
+    public final static double SLOW_INTAKE_POWER = 0.7;
+    public final static double INTAKE_POWER = 1.0;
+    public final static double OUTTAKE_POWER = 0.6;
+
     // DRIVETRAIN
     public final static double DRIVE_POWER = 1.0;
     public final static double DRIVE_POWER_TELE = 1.0;
     public final static double DRIVE_POWER_SLOW = 0.2;
+
 
 }

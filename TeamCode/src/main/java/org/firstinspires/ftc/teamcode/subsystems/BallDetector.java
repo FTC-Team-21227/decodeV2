@@ -11,20 +11,25 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class BallDetector {
     DigitalChannelImpl sensor;
-    public enum BallPresence
-    {
-        PRESENT,
-        ABSENT
-    }
-    private BallPresence presence;
+//    public enum BallPresence
+//    {
+//        PRESENT,
+//        ABSENT
+//    }
+//    private BallPresence presence;
+    private boolean presence;
 
     public BallDetector(HardwareMap hwMap)
     {
         sensor = hwMap.get(DigitalChannelImpl.class, "beam");
     }
 
+    public boolean update(){
+        presence = sensor.getState();
+        return presence;
+    }
     public boolean ballPresent(Telemetry telemetry)
     {
-        return sensor.getState();
+        return presence;
     }
 }

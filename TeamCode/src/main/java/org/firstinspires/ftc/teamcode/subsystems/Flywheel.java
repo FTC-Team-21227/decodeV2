@@ -38,6 +38,12 @@ public class Flywheel {
         pid = new PIDController(Robot.Constants.kP,Robot.Constants.kI,Robot.Constants.kD);
         f = new FeedforwardController(Robot.Constants.kS,Robot.Constants.kV);
     }
+
+    public void setPower(double power){
+        FLYWHEEL_MASTER.setPower(power);
+        FLYWHEEL2.setPower(power);
+    }
+
     /**
      * @param vel Velocity the flywheel will spin at
      */
@@ -52,14 +58,12 @@ public class Flywheel {
 //        FLYWHEEL.getMotor().setVelocity(targetVel);
             volts = v.getVoltage();
             double power = (pdds + f.calculate(targetVel)) / volts;
-            FLYWHEEL_MASTER.setPower(power);
-            FLYWHEEL2.setPower(power);
+            setPower(power);
             return power * volts;
         }
-        else{
+        else{ //it doesn't go here
             double power = Math.signum(targetVel-curVel);
-            FLYWHEEL_MASTER.setPower(power);
-            FLYWHEEL2.setPower(power);
+            setPower(power);
             return power;
         }
     }

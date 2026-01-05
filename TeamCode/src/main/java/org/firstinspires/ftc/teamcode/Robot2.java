@@ -23,6 +23,7 @@ import com.pedropathing.util.PoseHistory;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.subsystems.Intake2;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 
@@ -32,6 +33,7 @@ public class Robot2 {
     Robot2.AprilFollower follower;
     Shooter shooter; // Transfer system (intake), flywheel, turret, and hood
     Limelight limelight; // Limelight subsystem used in AprilDrive and Obelisk detection
+    Intake2 intakeTransfer;
 
 
     // ATTRIBUTES
@@ -49,6 +51,12 @@ public class Robot2 {
         ABSOLUTE, // Drive with AprilTag localization for absolute position on field
         ABSOLUTE_TELE_RESET
     } private Robot2.DriveState driveState;
+
+    private enum LaunchState {
+        IDLE,
+        SPIN_UP,
+        SHOOTING,
+    } private LaunchState launchState; // Instance
 
     public enum Color { // Enum that stores the alliance color, accessible globally
         RED,
@@ -176,6 +184,26 @@ public class Robot2 {
             case 22: return new char[]{'P','G','P'};
             case 23: return new char[]{'P','P', 'G'};
             default: return new char[]{'G','P','P'}; // fallback
+        }
+    }
+
+    // Shooting sequence for one shot
+    public void shootSequence(double flywheelVel, double hoodAngle, double turretAngle) {
+        ElapsedTime spinUpTimer = new ElapsedTime(); // Time flywheel acceleration
+        switch (launchState) {
+            case IDLE:
+                spinUpTimer.reset();
+                intakeTransfer.nextArtifact(); // Push balls to new spots
+                launchState = LaunchState.SPIN_UP;
+                break;
+            case SPIN_UP: // Check if flywheel velocity is enough to shoot
+                if(shooter.flywheel.getVel() > flywheelVel - 50 || spinUpTimer.seconds() > Robot.Constants.spinUpTimeout) {
+                    launchState = LaunchState.SHOOTING;
+                }
+                break;
+            case SHOOTING:
+                intakeTransfer.shootArtifact(); // Move ball to the flywheel
+                break;
         }
     }
 

@@ -4,20 +4,19 @@ package org.firstinspires.ftc.teamcode.tuning;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.subsystems.Turret;
+import org.firstinspires.ftc.teamcode.subsystems.Turret_Old;
 
 @TeleOp
 public class turretTest extends LinearOpMode {
 //    FtcDashboard dashboard = FtcDashboard.getInstance();
 //    Telemetry telemetry = dashboard.getTelemetry();
-    Turret turret;//    private DigitalChannel LED_DigitalChannel;
+    Turret_Old turret;//    private DigitalChannel LED_DigitalChannel;
 
     @Override
     public void runOpMode() throws InterruptedException {
  //        initialization();
-        turret = new Turret(hardwareMap);
+        turret = new Turret_Old(hardwareMap);
         waitForStart();
         double turretPos = 0.5;
         while (opModeIsActive()) {
