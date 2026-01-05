@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static org.firstinspires.ftc.teamcode.subsystems.ShooterSystem.createDefaultTable;
+
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -7,11 +9,16 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 
 public class Shooter {
     private Hood hood;
     private Turret turret;
     public Flywheel flywheel;
+    public ShooterSystem.ShooterLookupTable table;
 
     // CONSTANTS
     public double P = 0.65; // Fraction of time along trajectory from ground to ground
@@ -30,6 +37,7 @@ public class Shooter {
         hood = new Hood(hardwareMap);
         turret = new Turret(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
+        table = createDefaultTable();
     }
     // METHODS
     public Vector getGoalVector(Pose robotPose) {
@@ -124,8 +132,11 @@ public class Shooter {
         // Convert vel (speed) to rad/s (example calibration: vel = wheelRadius * rad/s
         double radps = vel / wheelRadius; // RPM
 
+        ShooterSystem.ShooterPoint point = table.get(distance, 14);
         flywheelVel = radps * 28 / Math.PI / 2 * (Robot.Positions.flywheelPower + Robot.Positions.flywheelPowerOffset);
+//        flywheelVel = point.rpm;
         hoodAngle = theta+ Robot.Constants.hoodAngleOffset+ Robot.Positions.hoodAngleManualOffset;
+//        hoodAngle = point.distance;
         turretAngle = turretAngle+ Robot.Constants.turretAngleOffset+ Robot.Positions.turretAngleManualOffset;
 
 
@@ -184,8 +195,4 @@ public class Shooter {
             telemetry.addData("motorSpeed (tick/s to rad/s)", flywheel.getVel() * 2 * Math.PI / 28); //NOT IMPORTANT
         }
     }
-
-
-
-
 }
