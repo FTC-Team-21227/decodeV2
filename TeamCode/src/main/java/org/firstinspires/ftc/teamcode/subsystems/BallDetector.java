@@ -25,7 +25,7 @@ public class BallDetector {
     }
 
     public boolean update(){
-        presence = sensor.getState();
+        presence = !sensor.getState(); //getState() = true means beam isn't broken
         return presence;
     }
     public boolean ballPresent(Telemetry telemetry)

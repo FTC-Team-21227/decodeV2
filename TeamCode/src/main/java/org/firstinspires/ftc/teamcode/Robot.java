@@ -30,6 +30,7 @@ import org.firstinspires.ftc.teamcode.subsystems.BallDetector;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+import org.firstinspires.ftc.teamcode.subsystems.Stopper;
 
 
 // FULL ROBOT CLASS: drive, flywheel, turret, hood, feeder, intake, camera
@@ -37,12 +38,13 @@ public class Robot {
     private static Robot instance = null;
 
     // --------------SUBSYSTEMS---------------------------------------------------------------------
-    AprilFollower follower;
+    public AprilFollower follower;
     Intake intake;
     Shooter shooter;
 //    AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection, switch to limelight later
     Limelight camera;
     BallDetector ballDetector;
+    Stopper stopper;
 //    Voltage voltageSensor;
 
     // ---------------BOOLEANS AND ATTRIBUTES-------------------------------------------------------
@@ -70,6 +72,7 @@ public class Robot {
     private enum LaunchState {
         IDLE,
         SPIN_UP,
+        READY,
         SHOOTING,
     } private LaunchState launchState; // Instance
 
@@ -683,6 +686,7 @@ public class Robot {
 //        follower = new AprilFollower(hardwareMap, txWorldPinpoint);
         shooter = new Shooter(hardwareMap);
         ballDetector = new BallDetector(hardwareMap);
+        stopper = new Stopper(hardwareMap);
 
         this.opModeState = opModeState;
         launchState = LaunchState.IDLE;
@@ -731,6 +735,7 @@ public class Robot {
         follower.setPose(txWorldPinpoint.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
         shooter = new Shooter(hardwareMap);
         ballDetector = new BallDetector(hardwareMap);
+        stopper = new Stopper(hardwareMap);
 
 
         // Set enums
@@ -902,6 +907,7 @@ public class Robot {
 
     // --------------------WHEN TELEOP STARTS-------------------------------------------------------
     public void startTeleop(){
+        stopper.close();
     }
 
 
@@ -1005,7 +1011,7 @@ public class Robot {
             );
         }
         else{
-            follower.holdPoint(follower.getPose());
+            follower.holdPoint(follower.getPose()/*or a defined shooting pose*/);
         }
         return false;
     } // END OF DRIVING FUNCTION
@@ -1087,7 +1093,7 @@ public class Robot {
 
     //TODO: still need to incorporate a timeout, and manual override
     //TODO: also move shot and setRobotPose
-    public void updateShooter(Telemetry telemetry, boolean spinup, boolean humanFeed, boolean lock, boolean idle, boolean moveShot, Pose setRobotPose, double flywheelChange, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight) {
+    public void updateShooter(Telemetry telemetry, boolean shootRequested, boolean spinup, boolean humanFeed, boolean lock, boolean idle, boolean moveShot, Pose setRobotPose, double flywheelChange, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight) {
         //basically will decide whether the shooter should be spinning or not, modifying some params before passing into shooter update
         boolean shoot = true;
         switch (launchState){
@@ -1101,11 +1107,25 @@ public class Robot {
             case SPIN_UP: //flywheel is reaching the desired speed and hood/turret are moving to pos
                 //if flywheel speed and hood/turret angles are correct ==> SHOOTING
                 if (shooter.isAimed()){
-                    launchState = LaunchState.SHOOTING;
+                    launchState = LaunchState.READY;
                 }
                 //if idle requested ==> IDLE
                 else if (idle){
                     launchState = LaunchState.IDLE;
+                }
+                break;
+            case READY: //ready to shoot
+                //if flywheel speed and hood/turret angles are incorrect ==> SPIN_UP
+                if (!shooter.isAimed()){
+                    launchState = LaunchState.SPIN_UP;
+                }
+                //if idle requested or (no ball at top AND not transferring) ==> IDLE. idle request should be stronger. but automatic idle should be weaker.
+                else if (idle){
+                    launchState = LaunchState.IDLE;
+                }
+                else if (shootRequested){
+                    stopper.open();
+                    launchState = LaunchState.SHOOTING;
                 }
                 break;
             case SHOOTING: //ready to shoot
@@ -1113,8 +1133,9 @@ public class Robot {
                 if (!shooter.isAimed()){
                     launchState = LaunchState.SPIN_UP;
                 }
-                //if idle requested or (no ball at top AND not transferring) ==> IDLE
-                else if (idle || (!ballDetector.ballPresent(telemetry) && intakeState != IntakeState.TRANSFERRING)){
+                //if idle requested or (no ball at top AND not transferring) ==> IDLE. idle request should be stronger. but automatic idle should be weaker.
+                else if (idle || (!ballDetector.ballPresent(telemetry) && !shootRequested)){
+                    stopper.close();
                     launchState = LaunchState.IDLE;
                 }
                 break;
@@ -1353,8 +1374,9 @@ public class Robot {
         switch (intakeState) {
             case IDLE: // ------------------------------------------------------
                 if (shoot) {
-                    intakeState = IntakeState.TRANSFERRING;
+                    //TODO: think about removing this condition. flywheel may slow down after every shot. but this is only starting the shots. so idk
                     if (/*launchState == LaunchState.SHOOTING*/ shooter.isAimed()) { //TODO: 0.5s timeout here later
+                        intakeState = IntakeState.TRANSFERRING;
                         intake.intake();
                     }
                 } else if (in) {
@@ -1375,14 +1397,23 @@ public class Robot {
                     intake.stop();
                     intakeState = IntakeState.IDLE;
                 }
-                if (ballDetector.ballPresent(telemetry)){ //ball present at top. or 3
-                    intake.stop();
-                    intakeState = IntakeState.IDLE;
-                }
-//                if (4){
-//                    intake.outtake();
-//                    intakeState = IntakeState.OUTTAKING;
+                //TODO: remove this
+//                if (ballDetector.ballPresent(telemetry)){ //ball present at top. or 3
+//                    intake.stop();
+//                    intakeState = IntakeState.IDLE;
 //                }
+                //TODO: add outtake and shoot requests
+                else if (shoot) {
+                    //TODO: think about removing this. flywheel may slow down after every shot. but this is only starting the shots. so idk
+                    if (/*launchState == LaunchState.SHOOTING*/ true /*shooter.isAimed()*/) { //TODO: 0.5s timeout here later
+                        intakeState = IntakeState.TRANSFERRING;
+                        intake.intake();
+                    }
+                }
+                else if (out) {
+                    intakeState = IntakeState.OUTTAKING;
+                    intake.outtake();
+                }
                 break;
             case OUTTAKING:
                 if (!out){

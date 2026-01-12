@@ -1,10 +1,12 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.teleops;
 
 import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.teamcode.Robot;
 
 @TeleOp
 public class TeleopNew extends OpMode {
@@ -42,7 +44,11 @@ public class TeleopNew extends OpMode {
 //            robot.turret.turret.setPosition(turretPos);
 //        }
         //toggles: LB, x, y
-        if (gamepad1.leftBumperWasPressed()) intake = !intake;
+//        if (gamepad1.leftBumperWasPressed()) intake = !intake;
+        boolean lb; //should be the same as gamepad1.leftBumperWasPressed() i don't know why that's not working
+        if (gamepad1.left_bumper && !intake) lb = true;
+        else lb = false;
+        intake = gamepad1.left_bumper;
         if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) setPose = !setPose;
         if (gamepad2.yWasPressed()) human = !human;
         if (gamepad2.leftStickButtonWasPressed() /*|| gamepad1.leftStickButtonWasPressed()*/) slow = !slow;
@@ -54,11 +60,11 @@ public class TeleopNew extends OpMode {
 //        robot.updateVoltage(telemetry);
         //final: back = relocalize
         robot.updateFollower(false, gamepad1.touchpadWasPressed(), joinedTelemetry);
-        //final version will be: LB = intake toggle, b = reverse, RB = shoot request
-        robot.updateIntake(intake, gamepad1.b, !intake, gamepad1.right_bumper, joinedTelemetry);
+        //final version will be: LB = intake toggle, LT = reverse, RB = shoot request, RT = shoot 1
+        robot.updateIntake(lb, gamepad1.left_trigger > 0.1, lb, gamepad1.right_bumper, joinedTelemetry);
         robot.setGoalTarget();
-        //final version will be: RT = spinup request, LT = idle request, x = toggle setPose => shooter lock/manual control, rightstick up/down = flywheel scale, dpad up/down= hood, dpad left/right = turret, gamepad2 y = human feed toggle, start = power flywheel off, gamepad2 bumpers and triggers , gamepad2 a = velocity correction
-        robot.updateShooter(joinedTelemetry,gamepad1.right_trigger > 0.1, human, setPose, gamepad1.left_trigger > 0.1, moveShot, null, gamepad1.right_stick_y + gamepad2.right_stick_y, gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed(), gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed(), gamepad1.dpadLeftWasPressed() || gamepad2.dpadLeftWasPressed(), gamepad1.dpadRightWasPressed() || gamepad2.dpadRightWasPressed());
+        //final version will be: a = spinup request, b = idle request, x = toggle setPose => shooter lock/manual control, rightstick up/down = flywheel scale, dpad up/down= hood, dpad left/right = turret, gamepad2 y = human feed toggle, start = power flywheel off, gamepad2 bumpers and triggers , gamepad2 a = velocity correction
+        robot.updateShooter(joinedTelemetry,gamepad1.right_bumper, gamepad1.a, human, setPose, gamepad1.b, moveShot, null, gamepad1.right_stick_y + gamepad2.right_stick_y, gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed(), gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed(), gamepad1.dpadLeftWasPressed() || gamepad2.dpadLeftWasPressed(), gamepad1.dpadRightWasPressed() || gamepad2.dpadRightWasPressed());
         //final: toggle left stick button = slow mode, toggle y = p2p drive but it stops on its own
         p2p = robot.driveFieldCentric(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, slow, p2p);
 //        robot.drive2.drawPose(packet);
