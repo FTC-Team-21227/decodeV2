@@ -822,7 +822,9 @@ public class Robot {
 
     //temp thing that won't be needed later (follower only for drive testing)
     public void initFollower(HardwareMap hardwareMap, Telemetry telemetry) {
+        camera= new Limelight(hardwareMap);
         follower = new AprilFollower(org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap));
+
         // Set enums
         opModeState = OpModeState.TELEOP;
         launchState = LaunchState.IDLE;
