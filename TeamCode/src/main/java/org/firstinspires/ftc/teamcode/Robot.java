@@ -647,7 +647,7 @@ public class Robot {
             Pose poseWorldRobot = poseWorldTurret/*.times(turret.getPoseRobotTurret().inverse())*/;
 
             // Set the localizer pose to the current field-relative pose based on AprilTag reading.
-            base.setPose(poseWorldRobot);
+            base.setPose(poseWorldRobot.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
 
             // Telemetry displays robot position and heading information
             telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
@@ -1456,16 +1456,18 @@ public class Robot {
                 boolean success = follower.relocalize(telemetry);
                 if (success) aprilTimer.reset();
                 driveState = DriveState.RELATIVE;
+                txWorldPinpoint = follower.getPose().getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
                 break;
             case ABSOLUTE2:
                 Pose newPose = handlePose(new Pose(-51.84,51.2636,Math.toRadians(-54.2651)));
-                follower.setPose(newPose);
+                follower.setPose(newPose.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
                 txWorldPinpoint = newPose;
                 Constants.hoodAngleOffset = 0;
                 Constants.turretAngleOffset = 0;
                 Positions.turretAngleManualOffset = 0;
                 Positions.hoodAngleManualOffset = 0;
                 driveState = DriveState.RELATIVE;
+                aprilTimer.reset();
                 break;
         }
         double curTime = aprilTimer.milliseconds();
