@@ -619,11 +619,12 @@ public class Robot {
         @SuppressLint("DefaultLocale")
         public boolean relocalize(Telemetry telemetry) {
             // Update the pinpoint velocity estimate as normal
-            base.updatePose();
+            base.update();
             robotVel = base.getVelocity();
             robotAngVel = base.getAngularVelocity();
             Vector vel = robotVel;
             double angVel = robotAngVel;
+            txWorldPinpoint = follower.getPose().getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
 
             // ------------------------Exit conditions-----------------
             // Don't relocalize if robot moving too fast (motion blur)
@@ -632,7 +633,7 @@ public class Robot {
             }
 
             // Get camera's pose (field-relative) using AprilTag
-            Pose poseWorldTurret = camera.update(telemetry);
+            Pose poseWorldTurret = camera.update(txWorldPinpoint.getHeading(), telemetry);
             // If no pose was found, default to the pinpoint localizer
             if (poseWorldTurret == null){
                 return false; // EXIT METHOD
@@ -640,7 +641,7 @@ public class Robot {
 
             // ------------------------Continue------------------------
             // Add 90 degrees to change AprilTag heading information to same orientation as robot.
-            poseWorldTurret = new Pose(poseWorldTurret.getX(), poseWorldTurret.getY(),poseWorldTurret.getHeading() + Math.PI/2);
+//            poseWorldTurret = new Pose(poseWorldTurret.getX(), poseWorldTurret.getY(),poseWorldTurret.getHeading() + Math.PI/2);
 
             // Transforming the turret pose into the robot (FIELD RELATIVE) pose--> Pose multiplication: pWR = pWT * pRT^-1.
             // The calculation above is now unnecessary because the camera is mounted on the robot, not the turret
