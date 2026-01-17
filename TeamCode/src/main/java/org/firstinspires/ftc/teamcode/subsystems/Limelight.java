@@ -1,13 +1,15 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -17,7 +19,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 public class Limelight {
     Limelight3A limelight;
-    IMU imu;
+//    IMU imu;
+    GoBildaPinpointDriver pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+
 
     public Limelight(HardwareMap hardwareMap) // initialization constructor
     {
@@ -30,8 +34,12 @@ public class Limelight {
     // Returns camera's field-relative position
     public Pose update(Telemetry telemetry) {
         LLResult result = limelight.getLatestResult();
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
+        Pose2D pose2d = pinpoint.getPosition();
+        double robotYaw = pose2d.getHeading(AngleUnit.DEGREES);
+        limelight.updateRobotOrientation(robotYaw+180);
+
+//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+//        limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
 
         if (result != null && result.isValid()) {
             double tx = result.getTx(); // horizontal offset (deg)
