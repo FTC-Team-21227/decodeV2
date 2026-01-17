@@ -23,10 +23,6 @@ public class LimelightSample extends LinearOpMode {
         telemetry.setMsTransmissionInterval(11);
 
         limelight.pipelineSwitch(0);
-
-        /*
-         * Starts polling for data.
-         */
         limelight.start();
 
         while (opModeIsActive()) {
