@@ -24,9 +24,9 @@ public class Limelight {
     }
 
     // Returns camera's field-relative position
-    public Pose update(double heading, Telemetry telemetry) {
+    public Pose update(double headingDegrees /*degrees*/, Telemetry telemetry) {
         LLResult result = limelight.getLatestResult();
-        limelight.updateRobotOrientation(heading);
+        limelight.updateRobotOrientation(headingDegrees + 180);
         if (result != null && result.isValid()) {
             double tx = result.getTx(); // horizontal offset (deg)
             double ty = result.getTy(); // vertical offset (deg)
@@ -37,7 +37,7 @@ public class Limelight {
             // Extract 2D pose
             double x = botpose.getPosition().x;      // field X
             double y = botpose.getPosition().y;      // field Y
-//            double heading = botpose.getOrientation().getYaw(); // robot heading in radians
+            double heading = botpose.getOrientation().getYaw(); // robot heading in radians
 
             return new Pose(x, y, heading);
         } else {
