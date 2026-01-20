@@ -22,6 +22,7 @@ import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.paths.PathPoint;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -33,7 +34,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.subsystems.Stopper;
 
 
-// FULL ROBOT CLASS: drive, flywheel, turret, hood, feeder, intake, camera
+// FULL ROBOT CLASS: drive, shooter, intake, camera, beam break, stopper
 public class Robot {
     private static Robot instance = null;
 
@@ -45,6 +46,8 @@ public class Robot {
     Limelight camera;
     BallDetector ballDetector;
     Stopper stopper;
+    LED redled;
+    LED greenled;
 //    Voltage voltageSensor;
 
     // ---------------BOOLEANS AND ATTRIBUTES-------------------------------------------------------
@@ -688,6 +691,8 @@ public class Robot {
         shooter = new Shooter(hardwareMap);
         ballDetector = new BallDetector(hardwareMap);
         stopper = new Stopper(hardwareMap);
+//        redled = hardwareMap.get(LED.class, "shooterStatus_red");
+//        greenled = hardwareMap.get(LED.class, "shooterStatus_green");
 
         this.opModeState = opModeState;
         launchState = LaunchState.IDLE;
@@ -910,6 +915,7 @@ public class Robot {
 
     // --------------------WHEN TELEOP STARTS-------------------------------------------------------
     public void startTeleop(){
+        follower.startTeleopDrive(true);
         stopper.close();
     }
 
@@ -998,7 +1004,7 @@ public class Robot {
 
 
     // ---------------------------TELEOP FIELD-CENTRIC DRIVING--------------------------------------
-    public boolean driveFieldCentric(double forward, double right, double rotate, boolean slowMode, boolean p2p) {
+    public boolean driveTele(double forward, double right, double rotate, boolean slowMode, boolean p2p) {
         // Normal vs. slow mode
         if (!p2p) {
             if (slowMode) {
@@ -1012,6 +1018,8 @@ public class Robot {
                     -rotate,
                     true // Robot Centric
             );
+//            follower.activateHeading();
+//            follower.startTeleOpDrive();
         }
         else{
             follower.holdPoint(follower.getPose()/*or a defined shooting pose*/);
@@ -1096,6 +1104,7 @@ public class Robot {
 
     //TODO: still need to incorporate a timeout, and manual override
     //TODO: also move shot and setRobotPose
+    //TODO: removed ballDetector, as keeping shooter spun up is fine. verify it
     public void updateShooter(Telemetry telemetry, boolean shootRequested, boolean spinup, boolean humanFeed, boolean lock, boolean idle, boolean moveShot, Pose setRobotPose, double flywheelChange, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight) {
         //basically will decide whether the shooter should be spinning or not, modifying some params before passing into shooter update
         boolean shoot = true;
@@ -1103,9 +1112,11 @@ public class Robot {
             case IDLE: //flywheel is powered off and hood/turret are not moving
                 //if sees ball at top or intaking is off or transferring or force shot ready ==> SPIN_UP
                 shoot = false;
-                if (ballDetector.ballPresent(telemetry) || intakeState == IntakeState.TRANSFERRING || spinup || humanFeed){
+                if (/*ballDetector.ballPresent(telemetry) ||*/ intakeState == IntakeState.TRANSFERRING || spinup || humanFeed){
                     launchState = LaunchState.SPIN_UP;
                 }
+//                redled.on();
+//                greenled.off();
                 break;
             case SPIN_UP: //flywheel is reaching the desired speed and hood/turret are moving to pos
                 //if flywheel speed and hood/turret angles are correct ==> SHOOTING
@@ -1116,6 +1127,8 @@ public class Robot {
                 else if (idle){
                     launchState = LaunchState.IDLE;
                 }
+//                redled.on();
+//                greenled.on();
                 break;
             case READY: //ready to shoot
                 //if flywheel speed and hood/turret angles are incorrect ==> SPIN_UP
@@ -1127,9 +1140,11 @@ public class Robot {
                     launchState = LaunchState.IDLE;
                 }
                 else if (shootRequested){
-                    stopper.open();
+//                    stopper.open(); //better to only have it closed during intake. otherwise open stopper might cause some delay
                     launchState = LaunchState.SHOOTING;
                 }
+//                redled.off();
+//                greenled.on();
                 break;
             case SHOOTING: //ready to shoot
                 //if flywheel speed and hood/turret angles are incorrect ==> SPIN_UP
@@ -1137,10 +1152,12 @@ public class Robot {
                     launchState = LaunchState.SPIN_UP;
                 }
                 //if idle requested or (no ball at top AND not transferring) ==> IDLE. idle request should be stronger. but automatic idle should be weaker.
-                else if (idle || (!ballDetector.ballPresent(telemetry) && !shootRequested)){
-                    stopper.close();
+                else if (idle /*|| (!ballDetector.ballPresent(telemetry) && !shootRequested)*/){
+//                    stopper.close();
                     launchState = LaunchState.IDLE;
                 }
+//                redled.off();
+//                greenled.on();
                 break;
         }
         Pose robotPose = txWorldPinpoint;
@@ -1378,11 +1395,12 @@ public class Robot {
             case IDLE: // ------------------------------------------------------
                 if (shoot) {
                     //TODO: think about removing this condition. flywheel may slow down after every shot. but this is only starting the shots. so idk
-                    if (/*launchState == LaunchState.SHOOTING*/ shooter.isAimed()) { //TODO: 0.5s timeout here later
+//                    if (/*launchState == LaunchState.SHOOTING*/ shooter.isAimed()) { //TODO: 0.5s timeout here later
                         intakeState = IntakeState.TRANSFERRING;
-                        intake.intake();
-                    }
+                        intake.shoot();
+//                    }
                 } else if (in) {
+                    stopper.close();
                     intake.intake();
                     intakeState = IntakeState.INTAKING;
                 } else if (out) {
@@ -1397,6 +1415,7 @@ public class Robot {
 
             case INTAKING:
                 if (stopIn){
+                    stopper.open();
                     intake.stop();
                     intakeState = IntakeState.IDLE;
                 }
@@ -1409,11 +1428,13 @@ public class Robot {
                 else if (shoot) {
                     //TODO: think about removing this. flywheel may slow down after every shot. but this is only starting the shots. so idk
                     if (/*launchState == LaunchState.SHOOTING*/ true /*shooter.isAimed()*/) { //TODO: 0.5s timeout here later
+                        stopper.open();
                         intakeState = IntakeState.TRANSFERRING;
-                        intake.intake();
+                        intake.shoot();
                     }
                 }
                 else if (out) {
+                    stopper.open();
                     intakeState = IntakeState.OUTTAKING;
                     intake.outtake();
                 }
@@ -1460,6 +1481,7 @@ public class Robot {
                 txWorldPinpoint = follower.getPose().getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
                 break;
             case ABSOLUTE2:
+                follower.update();
                 Pose newPose = handlePose(new Pose(-51.84,51.2636,Math.toRadians(-54.2651)));
                 follower.setPose(newPose.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
                 txWorldPinpoint = newPose;

@@ -35,15 +35,16 @@ public class MecanumDirection extends LinearOpMode {
                     frontRightDrive.setPower(MOTOR_POWER);
                     telemetry.addLine("Running Motor: Front Right");
                 } else if (gamepad1.b) {
-                    view.rightMotors[1].power = MOTOR_POWER
+                    backRightDrive.setPower(MOTOR_POWER);
                     telemetry.addLine("Running Motor: Rear Right");
                 } else if (gamepad1.a) {
-                    view.leftMotors[1].power = MOTOR_POWER
+                    backLeftDrive.setPower(MOTOR_POWER);
                     telemetry.addLine("Running Motor: Rear Left");
                 } else {
-                    for (m in view.motors) {
-                        m.power = 0.0
-                    }
+                    frontLeftDrive.setPower(0);
+                    backLeftDrive.setPower(0);
+                    frontRightDrive.setPower(0);
+                    backRightDrive.setPower(0);
                     telemetry.addLine("Running Motor: None");
                 }
 
@@ -51,4 +52,4 @@ public class MecanumDirection extends LinearOpMode {
             }
         }
     }
-}
+

@@ -107,7 +107,21 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
 //        if (gamepad1.left_bumper) {
-            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+        double forward = -gamepad1.left_stick_y;
+        double right = gamepad1.left_stick_x;
+        if (gamepad1.dpad_up){
+            forward = -1;
+        }
+        else if (gamepad1.dpad_down){
+            forward = 1;
+        }
+        if (gamepad1.dpad_right){
+            right = 1;
+        }
+        else if (gamepad1.dpad_left){
+            right = -1;
+        }
+            drive(forward, right, gamepad1.right_stick_x);
 //        } else {
 //            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 //        }
