@@ -695,7 +695,7 @@ public class Robot {
 //        greenled = hardwareMap.get(LED.class, "shooterStatus_green");
 
         this.opModeState = opModeState;
-        launchState = LaunchState.IDLE;
+        launchState = LaunchState.SPIN_UP;
         driveState = DriveState.RELATIVE;
 
         feederTimer = new ElapsedTime();
@@ -746,7 +746,7 @@ public class Robot {
 
         // Set enums
         opModeState = OpModeState.TELEOP;
-        launchState = LaunchState.IDLE;
+        launchState = LaunchState.SPIN_UP;
         driveState = DriveState.RELATIVE;
 
         // Start timers
@@ -916,7 +916,7 @@ public class Robot {
     // --------------------WHEN TELEOP STARTS-------------------------------------------------------
     public void startTeleop(){
         follower.startTeleopDrive(true);
-        stopper.close();
+        stopper.open();
     }
 
 
@@ -941,6 +941,12 @@ public class Robot {
         public final static double spinUpTimeout = 2;
         public final static double kP = 0.052, kI = 0, kD = 0.000, kF = 10 /*kF will be removed in our new version*/, kS = 0.65, kV = 0.00450;
         public final static double humanFeedVel = -800 / 28.0 * Math.PI * 2; //in radps
+        //STOPPER
+        public final static double stopperScale0 = 0.04;
+        public final static double stopperScale1 = 0.19;
+        //ARM
+        public final static double armScale0 = 0.04;
+        public final static double armScale1 = 0.27;
         // FEEDER
         public final static double feederPower = 1.0;
         public final static double slowIntakePower = 0.7;
@@ -955,26 +961,27 @@ public class Robot {
         // HOOD
         public final static double hoodLowAngle = 65.36742754 * Math.PI/180; // the traj angle from horizonatla (rad) //75 //0;
         public final static double hoodHighAngle = 24.47717215 * Math.PI/180; //30 //50*Math.PI/180; //the traj angle from horizontal 55; // Highest actual degree is 41
-        public final static double hoodScale0 = 0.2; //0.27;
-        public final static double hoodScale1 = 0.8; //1; //0.85;
+        public final static double hoodScale0 = 0 ;//0.2; //0.27;
+        public final static double hoodScale1 = 0.89; //1; //0.85; down
         // TURRET
         /**
          * turret 0 = 0.48
          * oldest ones also work
          * for backwards turret, add math.pi here
          */
-        public static double turretAngleOffset = 0;
+        public final static double turretGearRatio = 23.0/105;
+        public static double turretAngleOffset = -69;
         public final static Pose turretPos = new Pose(-1.512,-0.12224409,0);
         public final static double turretHighAngle = 3*Math.PI/2; //164.7*Math.PI/180; //220*Math.PI/180;; //355*Math.PI/180; // //140*Math.PI/180; // In rad, pos = 1
         public final static double turretLowAngle = Math.PI/2; //-175*Math.PI/180; //-40*Math.PI/180;; // //-208*Math.PI/180; // In rad (= old -330 deg)
 //        public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
         // Offset from (-pi,pi) to (midpoint-pi, midpoint+pi), i.e. shift midpoint from 0 to new midpoint
-        public final static double turretTargetRangeOffset = Math.PI/2; //(turretLowAngle + turretHighAngle )/2.0; //turretHighAngle-Math.PI;
+        public final static double turretTargetRangeOffset = 0; //Math.PI/2; //(turretLowAngle + turretHighAngle )/2.0; //turretHighAngle-Math.PI;
         public final static double turretScale0 = 0.33055555555555555; //0.218; //0; //0.25 ;//0; //0.11;
         public final static double turretScale1 = 0.7838888888888889; //0.67; //1; //0.78; //0.86; //1;
-        public final static double turretClip0 = 0;
+        public final static double turretClip0 = -180; //0;
         public final static double turretClip0_tele = turretScale0;
-        public final static double turretClip1 = 0.8;
+        public final static double turretClip1 = 180; //0.8;
         public final static double turretClip1_tele = turretScale1;
         public final static double feederScale0 = 0;
         public final static double feederScale1 = 1;
@@ -1112,7 +1119,7 @@ public class Robot {
             case IDLE: //flywheel is powered off and hood/turret are not moving
                 //if sees ball at top or intaking is off or transferring or force shot ready ==> SPIN_UP
                 shoot = false;
-                if (/*ballDetector.ballPresent(telemetry) ||*/ intakeState == IntakeState.TRANSFERRING || spinup || humanFeed){
+                if (/*ballDetector.ballPresent(telemetry) ||*/ /*intakeState == IntakeState.TRANSFERRING*/ shootRequested || spinup/* || humanFeed*/){
                     launchState = LaunchState.SPIN_UP;
                 }
 //                redled.on();

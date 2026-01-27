@@ -24,7 +24,7 @@ public class Teleop extends OpMode {
 //    Telemetry telemetry = dashboard.getTelemetry();
     JoinedTelemetry joinedTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(),telemetry);
     public void init(){
-        robot = Robot.getInstance(new Pose(0,0, Math.PI), Robot.Color.BLUE); //start facing the goals, RED poses
+        robot = Robot.getInstance(new Pose(0,0, Math.PI), Robot.Color.RED); //start facing the goals, RED poses
         robot.initTeleop(hardwareMap, telemetry);
 //        robot.turret.turnToRobotAngle(0);
 //        robot.hood.turnToAngle(Math.toRadians(45));

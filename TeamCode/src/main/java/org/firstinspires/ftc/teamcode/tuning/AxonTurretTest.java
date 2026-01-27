@@ -83,7 +83,8 @@ public class AxonTurretTest {
         STARTPOS = stableAngle;
         previousAngle = stableAngle;
         homeAngle = stableAngle;
-        totalRotation = 0;
+        totalRotation = stableAngle;
+        targetRotation = stableAngle;
 
         // Default PID coefficients
         kP = 0.01;
@@ -147,7 +148,7 @@ public class AxonTurretTest {
         else if (angleDifference < -180) { angleDifference += 360; cliffs++; }
 
         // update rotation
-        totalRotation = currentAngle - homeAngle + cliffs * 360;
+        totalRotation = currentAngle /*- homeAngle*/ + cliffs * 360;
         previousAngle = currentAngle;
 
         if (!rtp) return;
@@ -213,8 +214,8 @@ public class AxonTurretTest {
         @Override
         public void runOpMode() throws InterruptedException {
             telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-            CRServo crservo = hardwareMap.crservo.get("servorot");
-            AnalogInput encoder = hardwareMap.get(AnalogInput.class, "axonAnalog");
+            CRServo crservo = hardwareMap.crservo.get("turret");
+            AnalogInput encoder = hardwareMap.get(AnalogInput.class, "turretEncoder");
             AxonTurretTest servo = new AxonTurretTest(crservo, encoder);
 
             boolean lastDpadUp = false;

@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static org.firstinspires.ftc.teamcode.subsystems.ShooterSystem.createDefaultTable;
-
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -37,7 +35,7 @@ public class Shooter {
         hood = new Hood(hardwareMap);
         turret = new Turret(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
-        table = createDefaultTable();
+        table = ShooterSystem.createDefaultTable();
     }
     // METHODS
     public Vector getGoalVector(Pose robotPose) {
@@ -105,10 +103,10 @@ public class Shooter {
         // Adjustment values, static so they can be easily accessed
         if(flywheelUp) {Robot.Positions.flywheelPowerOffset += 5;}
         if(flywheelDown) {Robot.Positions.flywheelPowerOffset -= 5;}
-        if(hoodUp) {Robot.Positions.hoodAngleManualOffset += 5;}
-        if(hoodDown) {Robot.Positions.hoodAngleManualOffset -= 5;}
-        if(turretLeft) {Robot.Positions.turretAngleManualOffset += 5;}
-        if(turretRight) {Robot.Positions.turretAngleManualOffset -= 5;}
+        if(hoodUp) {Robot.Positions.hoodAngleManualOffset += Math.toRadians(1);}
+        if(hoodDown) {Robot.Positions.hoodAngleManualOffset -= Math.toRadians(1);}
+        if(turretLeft) {Robot.Positions.turretAngleManualOffset += Math.toRadians(1);}
+        if(turretRight) {Robot.Positions.turretAngleManualOffset -= Math.toRadians(1);}
 
         // ------------------------Shooting trajectory values-----------------------
         double p = 0.65; // Fraction of time along trajectory from ground to ground
@@ -136,7 +134,7 @@ public class Shooter {
         flywheelVel = radps * 28 / Math.PI / 2 * (Robot.Positions.flywheelPower + Robot.Positions.flywheelPowerOffset);
 //        flywheelVel = point.rpm;
         hoodAngle = theta+ Robot.Constants.hoodAngleOffset+ Robot.Positions.hoodAngleManualOffset;
-//        hoodAngle = point.distance;
+//        hoodAngle = point.angle;
         turretAngle = turretAngle+ Robot.Constants.turretAngleOffset+ Robot.Positions.turretAngleManualOffset;
 
 
@@ -152,7 +150,7 @@ public class Shooter {
         else {
             flywheel.spinTo(flywheelVel);
             hood.turnToAngle(hoodAngle);
-            turret.turnToRobotAngle(turretAngle);
+            turret.turnToRobotAngle(Math.toDegrees(turretAngle));
         }
 //        telemetry.update();
     }
