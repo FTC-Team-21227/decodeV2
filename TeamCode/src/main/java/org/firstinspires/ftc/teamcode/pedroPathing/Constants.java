@@ -24,14 +24,14 @@ public class Constants {
             .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.01,0.0,0.000005,0.6,0.0))
             .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.02, 0, 0.001, 0))
             .centripetalScaling(0.0005)
-            .mass(8);
+            .mass(8); // kg mass of robot
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
             .xVelocity(60.89125601700912)
             .yVelocity(52.443046029158474)
 //            .useVoltageCompensation(true)
-            .rightFrontMotorName("W_FR")
+            .rightFrontMotorName("W_FR") // motor names, keep consistent on configs
             .rightRearMotorName("W_BR")
             .leftRearMotorName("W_BL")
             .leftFrontMotorName("W_FL")
@@ -41,13 +41,13 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(4.15)
-            .strafePodX(0)
+            .forwardPodY(6) // use inches
+            .strafePodX(4.75)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
+            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 

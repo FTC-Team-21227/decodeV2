@@ -36,7 +36,7 @@ public class Limelight {
         LLResult result = limelight.getLatestResult();
         Pose2D pose2d = pinpoint.getPosition();
         double robotYaw = pose2d.getHeading(AngleUnit.DEGREES);
-        limelight.updateRobotOrientation(robotYaw+180);
+        limelight.updateRobotOrientation(robotYaw + 180); // update for megatag 2
 
 //        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
 //        limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
@@ -48,9 +48,8 @@ public class Limelight {
             Pose3D botpose = result.getBotpose();
             // pose3d, field relative, coords + orientation
 
-            // Extract 2D pose
-            double x = botpose.getPosition().x;      // field X
-            double y = botpose.getPosition().y;      // field Y
+            double x = botpose.getPosition().x; // x
+            double y = botpose.getPosition().y; // y
             double heading = botpose.getOrientation().getYaw(); // robot heading in radians
 
             return new Pose(x, y, heading);
