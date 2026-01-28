@@ -693,7 +693,7 @@ public class Robot2 {
             }
 
             // Get camera's pose (field-relative) using AprilTag
-            Pose poseWorldTurret = limelight.update(telemetry);
+            Pose poseWorldTurret = limelight.update(txWorldPinpoint.getHeading(), telemetry);
             // If no pose was found, default to the pinpoint localizer
             if (poseWorldTurret == null){
                 return false; // EXIT METHOD
