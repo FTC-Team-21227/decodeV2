@@ -9,11 +9,16 @@ import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 
 
 public class Limelight {
     Limelight3A limelight;
+    GoBildaPinpointDriver pinpoint;
 
     public Limelight(HardwareMap hardwareMap) // initialization constructor
     {
@@ -26,7 +31,6 @@ public class Limelight {
     // Returns camera's field-relative position
     public Pose update(double headingDegrees /*degrees*/, Telemetry telemetry) {
         LLResult result = limelight.getLatestResult();
-<<<<<<< HEAD
         Pose2D pose2d = pinpoint.getPosition();
         double robotYaw = pose2d.getHeading(AngleUnit.DEGREES);
         limelight.updateRobotOrientation(robotYaw + 180); // update for megatag 2
@@ -34,9 +38,7 @@ public class Limelight {
 //        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
 //        limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
 
-=======
         limelight.updateRobotOrientation(headingDegrees + 180);
->>>>>>> c3e49e188f8fd4005824735df0a0a594ff98d47f
         if (result != null && result.isValid()) {
             double tx = result.getTx(); // horizontal offset (deg)
             double ty = result.getTy(); // vertical offset (deg)
