@@ -86,9 +86,9 @@ public class RTPAxon {
         totalRotation = stableAngle;
 
         // Default PID coefficients
-        kP = 0.01;
-        kI = 0.0001;
-        kD = 0.001;
+        kP = 0.005;
+        kI = 0.00001;
+        kD = 0.0001;
         integralSum = 0.0;
         lastError = 0.0;
         maxIntegralSum = 100.0;
@@ -149,6 +149,9 @@ public class RTPAxon {
         // update rotation
         totalRotation = currentAngle /*- homeAngle*/ + cliffs * 360;
         previousAngle = currentAngle;
+        return totalRotation;
+    }
+    public double totalRotation(){
         return totalRotation;
     }
 

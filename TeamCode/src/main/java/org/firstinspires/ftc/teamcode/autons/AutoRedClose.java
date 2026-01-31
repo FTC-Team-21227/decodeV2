@@ -22,16 +22,22 @@ public class AutoRedClose extends OpMode {
     private enum PathState{
         START,
         SCOREPRELOAD,
+        SCORINGPRELOAD,
         PICKUP1,
         SCORE1,
+        SCORING1,
         PICKUP2,
         SCORE2,
+        SCORING2,
         PICKUPGATE1,
         SCOREGATE1,
+        SCORINGGATE1,
         PICKUPGATE2,
         SCOREGATE2,
+        SCORINGGATE2,
         PICKUP3,
         SCORE3,
+        SCORING3,
         PARK,
         DONE
     }
@@ -137,8 +143,16 @@ public class AutoRedClose extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
                     /* Score Preload */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORINGPRELOAD);
+                }
+                break;
+            case SCORINGPRELOAD:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
                     follower.followPath(grabPickup1, true);
                     setPathState(PathState.PICKUP1);
                 }
@@ -146,9 +160,8 @@ public class AutoRedClose extends OpMode {
             case PICKUP1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
                 if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    intake = false;
+                    /* Move to Score Balls */
                     follower.followPath(scorePickup1, true);
                     setPathState(PathState.SCORE1);
                 }
@@ -156,9 +169,17 @@ public class AutoRedClose extends OpMode {
             case SCORE1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
-                    /* Score Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    /* Score Balls */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORING1);
+                }
+                break;
+            case SCORING1:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
                     follower.followPath(grabPickup2, true);
                     setPathState(PathState.PICKUP2);
                 }
@@ -167,8 +188,8 @@ public class AutoRedClose extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if (!follower.isBusy()) {
                     /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    intake = false;
+                    /* Move to Score Balls */
                     follower.followPath(scorePickup2, true);
                     setPathState(PathState.SCORE2);
                 }
@@ -176,9 +197,17 @@ public class AutoRedClose extends OpMode {
             case SCORE2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
-                    /* Score Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    /* Score Balls */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORING2);
+                }
+                break;
+            case SCORING2:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
                     follower.followPath(grabGate1, true);
                     setPathState(PathState.PICKUPGATE1);
                 }
@@ -186,9 +215,8 @@ public class AutoRedClose extends OpMode {
             case PICKUPGATE1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    intake = false;
+                    /* Move to Score Balls */
                     follower.followPath(scoreGate1, true);
                     setPathState(PathState.SCOREGATE1);
                 }
@@ -197,8 +225,16 @@ public class AutoRedClose extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
                     /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORINGGATE1);
+                }
+                break;
+            case SCORINGGATE1:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
                     follower.followPath(grabGate2, true);
                     setPathState(PathState.PICKUPGATE2);
                 }
@@ -206,9 +242,8 @@ public class AutoRedClose extends OpMode {
             case PICKUPGATE2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    intake = false;
+                    /* Move to Score Balls */
                     follower.followPath(scoreGate2, true);
                     setPathState(PathState.SCOREGATE2);
                 }
@@ -217,8 +252,16 @@ public class AutoRedClose extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
                     /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORINGGATE2);
+                }
+                break;
+            case SCORINGGATE2:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
                     follower.followPath(grabPickup3, true);
                     setPathState(PathState.PICKUP3);
                 }
@@ -226,9 +269,8 @@ public class AutoRedClose extends OpMode {
             case PICKUP3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    intake = false;
+                    /* Move to Score Balls */
                     follower.followPath(scorePickup3, true);
                     setPathState(PathState.SCORE3);
                 }
@@ -236,6 +278,14 @@ public class AutoRedClose extends OpMode {
             case SCORE3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORING3);
+                }
+                break;
+            case SCORING3:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
                     follower.followPath(park, true);
                     setPathState(PathState.PARK);
                 }
@@ -268,7 +318,7 @@ public class AutoRedClose extends OpMode {
 
         // These loop the movements of the robot, these must be called continuously in order to work
         follower.update();
-        robot.updateBallDetector();
+//        robot.updateBallDetector();
         robot.updateIntake(intake, false, !intake, shoot, telemetry);
         robot.updateShooter(telemetry, true, true, false, false, false, false, null, 0,false,false,false,false);
         autonomousPathUpdate();

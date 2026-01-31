@@ -31,7 +31,9 @@ import org.firstinspires.ftc.teamcode.subsystems.BallDetector;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+import org.firstinspires.ftc.teamcode.subsystems.ShooterSystem;
 import org.firstinspires.ftc.teamcode.subsystems.Stopper;
+import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 
 // FULL ROBOT CLASS: drive, shooter, intake, camera, beam break, stopper
@@ -41,10 +43,11 @@ public class Robot {
     // --------------SUBSYSTEMS---------------------------------------------------------------------
     public AprilFollower follower;
     Intake intake;
-    Shooter shooter;
+    private Shooter shooter;
+//    Turret turret;
 //    AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection, switch to limelight later
     Limelight camera;
-    BallDetector ballDetector;
+//    BallDetector ballDetector;
     Stopper stopper;
     LED redled;
     LED greenled;
@@ -143,7 +146,7 @@ public class Robot {
             RobotLog.d("What...");
         }
         // Robot's field relative pose, which starts at initialPose
-        txWorldPinpoint = initialPose.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
+        txWorldPinpoint = PedroToFTC(initialPose); //.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
 //        voltageSensor = new Voltage(hardwareMap.get(VoltageSensor.class,"Control Hub"));
     }
 
@@ -627,7 +630,7 @@ public class Robot {
             robotAngVel = base.getAngularVelocity();
             Vector vel = robotVel;
             double angVel = robotAngVel;
-            txWorldPinpoint = follower.getPose().getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
+            txWorldPinpoint = PedroToFTC(follower.getPose());//.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
 
             // ------------------------Exit conditions-----------------
             // Don't relocalize if robot moving too fast (motion blur)
@@ -649,9 +652,9 @@ public class Robot {
             // Transforming the turret pose into the robot (FIELD RELATIVE) pose--> Pose multiplication: pWR = pWT * pRT^-1.
             // The calculation above is now unnecessary because the camera is mounted on the robot, not the turret
             Pose poseWorldRobot = poseWorldTurret/*.times(turret.getPoseRobotTurret().inverse())*/;
-
+            txWorldPinpoint = poseWorldRobot;
             // Set the localizer pose to the current field-relative pose based on AprilTag reading.
-            base.setPose(poseWorldRobot.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
+            base.setPose(FTCToPedro(poseWorldRobot));//.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
 
             // Telemetry displays robot position and heading information
             telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
@@ -686,10 +689,10 @@ public class Robot {
 //        camera = new AprilTagLocalization2(hardwareMap);
         camera = new Limelight(hardwareMap);
         follower = new AprilFollower(org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap));
-        follower.setPose(txWorldPinpoint.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
+        follower.setPose(FTCToPedro(txWorldPinpoint));//.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
 //        follower = new AprilFollower(hardwareMap, txWorldPinpoint);
         shooter = new Shooter(hardwareMap);
-        ballDetector = new BallDetector(hardwareMap);
+//        ballDetector = new BallDetector(hardwareMap);
         stopper = new Stopper(hardwareMap);
 //        redled = hardwareMap.get(LED.class, "shooterStatus_red");
 //        greenled = hardwareMap.get(LED.class, "shooterStatus_green");
@@ -697,6 +700,7 @@ public class Robot {
         this.opModeState = opModeState;
         launchState = LaunchState.SPIN_UP;
         driveState = DriveState.RELATIVE;
+        intakeState = IntakeState.IDLE;
 
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
@@ -738,16 +742,18 @@ public class Robot {
 //        camera = new AprilTagLocalization2(hardwareMap);
         camera = new Limelight(hardwareMap);
         follower = new AprilFollower(org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap));
-        follower.setPose(txWorldPinpoint.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
+        follower.setPose(FTCToPedro(txWorldPinpoint)); //.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
         shooter = new Shooter(hardwareMap);
-        ballDetector = new BallDetector(hardwareMap);
+//        ballDetector = new BallDetector(hardwareMap);
         stopper = new Stopper(hardwareMap);
+//        turret = new Turret(hardwareMap);
 
 
         // Set enums
         opModeState = OpModeState.TELEOP;
         launchState = LaunchState.SPIN_UP;
         driveState = DriveState.RELATIVE;
+        intakeState = IntakeState.IDLE;
 
         // Start timers
         feederTimer = new ElapsedTime();
@@ -756,8 +762,8 @@ public class Robot {
 
         // Constants
         Positions.drivePower = Constants.drivePower_Tele;
-        Positions.turretClip0 = Constants.turretClip0_tele;
-        Positions.turretClip1 = Constants.turretClip1_tele; //CHANGE BACK
+        Positions.turretClip0 = Constants.turretClip0;
+        Positions.turretClip1 = Constants.turretClip1; //CHANGE BACK
         Positions.flywheelPower = Constants.flywheelPower_Tele;
         Positions.flywheelPowerOffset = 0;
         Positions.turretAngleManualOffset = 0;
@@ -835,6 +841,7 @@ public class Robot {
         opModeState = OpModeState.TELEOP;
         launchState = LaunchState.IDLE;
         driveState = DriveState.RELATIVE;
+        intakeState = IntakeState.IDLE;
 
         // Start timers
         feederTimer = new ElapsedTime();
@@ -843,8 +850,8 @@ public class Robot {
 
         // Constants
         Positions.drivePower = Constants.drivePower_Tele;
-        Positions.turretClip0 = Constants.turretClip0_tele;
-        Positions.turretClip1 = Constants.turretClip1_tele; //CHANGE BACK
+        Positions.turretClip0 = Constants.turretClip0;
+        Positions.turretClip1 = Constants.turretClip1; //CHANGE BACK
         Positions.flywheelPower = Constants.flywheelPower_Tele;
         Positions.flywheelPowerOffset = 0;
         Positions.turretAngleManualOffset = 0;
@@ -913,10 +920,13 @@ public class Robot {
 //        telemetry.update();
     } // END OF INITIALIZATION FUNCTION
 
+    public void startAuto(){
+
+    }
     // --------------------WHEN TELEOP STARTS-------------------------------------------------------
     public void startTeleop(){
         follower.startTeleopDrive(true);
-        stopper.open();
+        stopper.open(); //TODO: uncomment
     }
 
 
@@ -959,10 +969,10 @@ public class Robot {
         public final static double feedTime = 0.5; //0.5; //probably increase to 0.6
         public final static double feedDownTime = 0.4; //less than feedUpTime probably
         // HOOD
-        public final static double hoodLowAngle = 65.36742754 * Math.PI/180; // the traj angle from horizonatla (rad) //75 //0;
-        public final static double hoodHighAngle = 24.47717215 * Math.PI/180; //30 //50*Math.PI/180; //the traj angle from horizontal 55; // Highest actual degree is 41
+        public final static double hoodLowAngle = 45 * Math.PI/180; //65.36742754 * Math.PI/180; // the traj angle from horizonatla (rad) //75 //0;
+        public final static double hoodHighAngle = (90-29)*Math.PI/180; //24.47717215 * Math.PI/180; //30 //50*Math.PI/180; //the traj angle from horizontal 55; // Highest actual degree is 41
         public final static double hoodScale0 = 0 ;//0.2; //0.27;
-        public final static double hoodScale1 = 0.89; //1; //0.85; down
+        public final static double hoodScale1 = 0.50; //0.65; //0.89; //1; //0.85; down
         // TURRET
         /**
          * turret 0 = 0.48
@@ -970,8 +980,8 @@ public class Robot {
          * for backwards turret, add math.pi here
          */
         public final static double turretGearRatio = 23.0/105;
-        public static double turretAngleOffset = -69;
-        public final static Pose turretPos = new Pose(-1.512,-0.12224409,0);
+        public static double turretAngleOffset = -11; //-69 //this is real
+        public final static Pose turretPos = new Pose(4.502,0,0);
         public final static double turretHighAngle = 3*Math.PI/2; //164.7*Math.PI/180; //220*Math.PI/180;; //355*Math.PI/180; // //140*Math.PI/180; // In rad, pos = 1
         public final static double turretLowAngle = Math.PI/2; //-175*Math.PI/180; //-40*Math.PI/180;; // //-208*Math.PI/180; // In rad (= old -330 deg)
 //        public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
@@ -979,10 +989,10 @@ public class Robot {
         public final static double turretTargetRangeOffset = 0; //Math.PI/2; //(turretLowAngle + turretHighAngle )/2.0; //turretHighAngle-Math.PI;
         public final static double turretScale0 = 0.33055555555555555; //0.218; //0; //0.25 ;//0; //0.11;
         public final static double turretScale1 = 0.7838888888888889; //0.67; //1; //0.78; //0.86; //1;
-        public final static double turretClip0 = -180; //0;
-        public final static double turretClip0_tele = turretScale0;
-        public final static double turretClip1 = 180; //0.8;
-        public final static double turretClip1_tele = turretScale1;
+        public final static double turretClip0 = -45; //0;
+//        public final static double turretClip0_tele = turretClip0; //turretScale0;
+        public final static double turretClip1 = 45; //0.8;
+//        public final static double turretClip1_tele = turretClip1; //turretScale1;
         public final static double feederScale0 = 0;
         public final static double feederScale1 = 1;
         public final static double drivePower = 1.0;
@@ -1034,6 +1044,55 @@ public class Robot {
         return false;
     } // END OF DRIVING FUNCTION
 
+    //temp
+    public void updateTurret(Telemetry telemetry){
+        // Adjustment values, static so they can be easily accessed
+        // ------------------------Shooting trajectory values-----------------------
+        double p = 0.65; // Fraction of time along trajectory from ground to ground
+        double g = 386.22; // Gravity (in/s^2)
+        double deltaH = Robot.Positions.deltaH; // Height difference from shooter to goal
+        double flightTime = Math.sqrt(2 * deltaH / (p * g * (1 - p))); // Ball trajectory time from ground to ground
+
+        // Calculate shot vector using TURRET's position on the robot and ROBOT's heading---
+        Pose pose = txWorldPinpoint.plus(Robot.Constants.turretPos); // Turret's field-relative position
+        Vector goalVector = Robot.Positions.goalPos.minus(pose.getAsVector());
+        double distance = goalVector.getMagnitude(); // Horizontal distance
+        double goalVectorAngle = goalVector.getTheta(); // Angle
+
+        // -----Calculate hood angle, flywheel velocity, and turret angle--------
+        double theta = Math.atan(deltaH / (distance * (1 - p))); // Ball launch angle of elevation
+        double vel = distance / (p * flightTime * Math.cos(theta)); // Ball launch speed
+        double heading = pose.getHeading(); //
+        turretAngle = goalVectorAngle - heading; // Angle to turn turret to (relative to robot's heading)
+        double wheelRadius = 1.89;
+
+        // Convert vel (speed) to rad/s (example calibration: vel = wheelRadius * rad/s
+        double radps = vel / wheelRadius; // RPM
+
+//        ShooterSystem.ShooterPoint point = table.get(distance, 14);
+//        flywheelVel = radps * 28 / Math.PI / 2 * (Robot.Positions.flywheelPower + Robot.Positions.flywheelPowerOffset);
+//        flywheelVel = point.rpm;
+//        hoodAngle = theta+ Robot.Constants.hoodAngleOffset+ Robot.Positions.hoodAngleManualOffset;
+//        hoodAngle = point.angle;
+        turretAngle = turretAngle+ Robot.Constants.turretAngleOffset+ Robot.Positions.turretAngleManualOffset;
+
+//        if (!shoot){
+//            flywheel.setPower(0);
+            //don't move hood and turret
+//        }
+//        else if (humanFeed) {
+//            flywheel.spinTo(Robot.Constants.humanFeedVel);
+//            hood.turnToAngle(Math.PI/2);
+//            turret.turnToRobotAngle(0);
+//        }
+//        else {
+//            flywheel.spinTo(flywheelVel);
+//            hood.turnToAngle(hoodAngle);
+//            turret.turnToRobotAngle(Math.toDegrees(turretAngle));
+            RobotLog.a(""+Math.toDegrees(turretAngle));
+//        }
+    }
+
     //temp testing method delete it later
     //use txWorldPinpoint instead of follower.getPose() for like every method thinkable
     //shoter calculations are all done in the InvertedFTCCoordinates coordinate system. to be consistent with old code and camera coordinates
@@ -1084,6 +1143,7 @@ public class Robot {
 
 
         // ---------------------------TELEMETRY LINES--------------------------------
+        telemetry.addLine("---CALCULATE SHOOTER");
         telemetry.addLine("robotTurretPose (inchxinchxdeg): " + pose.getX()+" "+pose.getY()+" "+pose.getHeading()); //NOT IMPORTANT
         telemetry.addLine("goalVector (inchxinch): " + goalVector.getXComponent()+" "+goalVector.getYComponent());
         telemetry.addLine("goalPos (inchxinch): " + Positions.goalPos.getXComponent()+" "+ Positions.goalPos.getYComponent()); //NOT IMPORTANT
@@ -1102,9 +1162,9 @@ public class Robot {
 //        telemetry.update();
     }
 
-    public void updateBallDetector(){
-        ballDetector.update();
-    }
+//    public void updateBallDetector(){
+//        ballDetector.update();
+//    }
 
     // ---------------------------SHOOTER METHOD----------------------------------------------------
     // Calculates and sets hood angle and flywheel RPM. Includes shooter state manager.
@@ -1458,7 +1518,7 @@ public class Robot {
                     intakeState = IntakeState.IDLE;
                 }
                 break;
-        } // --------------------END OF STATE MANAGER--------------------------------
+        }  // --------------------END OF STATE MANAGER--------------------------------
 //        telemetry.update();
     } // -------------------------------END OF UPDATE SHOOTER---------------------------------------
 
@@ -1471,7 +1531,7 @@ public class Robot {
         switch (driveState){
             case RELATIVE:
                 follower.update();
-                txWorldPinpoint = follower.getPose().getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
+                txWorldPinpoint = PedroToFTC(follower.getPose());//.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
                 robotVel = follower.getVelocity();
                 robotVel.rotateVector(-Math.PI/2);
                 robotAngVel = follower.getAngularVelocity();
@@ -1485,28 +1545,28 @@ public class Robot {
                 boolean success = follower.relocalize(telemetry);
                 if (success) aprilTimer.reset();
                 driveState = DriveState.RELATIVE;
-                txWorldPinpoint = follower.getPose().getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
+//                txWorldPinpoint = PedroToFTC(follower.getPose());//.getAsCoordinateSystem(InvertedFTCCoordinates.INSTANCE);
                 break;
             case ABSOLUTE2:
                 follower.update();
                 Pose newPose = handlePose(new Pose(-51.84,51.2636,Math.toRadians(-54.2651)));
-                follower.setPose(newPose.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
+                follower.setPose(FTCToPedro(newPose));//.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
                 txWorldPinpoint = newPose;
                 Constants.hoodAngleOffset = 0;
                 Constants.turretAngleOffset = 0;
                 Positions.turretAngleManualOffset = 0;
                 Positions.hoodAngleManualOffset = 0;
-                driveState = DriveState.RELATIVE;
                 aprilTimer.reset();
+                driveState = DriveState.RELATIVE;
                 break;
         }
         double curTime = aprilTimer.milliseconds();
         telemetry.addData("loop time (ms)",curTime-lastTime);
         telemetry.addData("time since last relocalization (s)", curTime/1000.0); //IMPORTANT
         lastTime = curTime;
-        telemetry.addData("x", follower.getPose().getX()); //ALL IMPORTANT
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.addData("follower x", follower.getPose().getX()); //ALL IMPORTANT
+        telemetry.addData("follower y", follower.getPose().getY());
+        telemetry.addData("follower heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
     } //----------------------------END OF LOCALIZATION CLASS---------------------------------------
 
     // ---------------------------------------AIMING------------------------------------------------
@@ -1556,16 +1616,6 @@ public class Robot {
     }
 
 
-    // Lookup table (lut)
-    /*
-    public int[][][] power = {{{1}}};
-    public int[][][] angle = {{{1}}};
-    public int[] lookUp(Vector2d pos, Vector2d vel){
-
-        return new int[]{power[0][0][0],angle[0][0][0]};
-    }
-     */
-
     // --------------------------------HELPER METHODS-----------------------------------------------
     // Mirror a vector
     public Vector mirrorVector(Vector vector){
@@ -1586,156 +1636,14 @@ public class Robot {
         }
         return vector;
     }
-
-
-    // ------------------ CALCULATE COLOR SEQUENCE FROM OBELISK ID ---------------------------------
-    public static char[] getDesiredPattern(int obeliskID) {
-        switch (obeliskID) {
-            case 21: return new char[]{'G','P','P'};
-            case 22: return new char[]{'P','G','P'};
-            case 23: return new char[]{'P','P', 'G'};
-            default: return new char[]{'G','P','P'}; // fallback
-        }
+    public Pose FTCToPedro(Pose pose){
+        Pose rotatedPose = pose.rotate(-Math.PI / 2, true);
+        return rotatedPose.plus(new Pose(72, 72));
     }
-
-
-    // ------------------------COMPUTE INTAKE FIRING ORDER -----------------------------------------
-    // Slots: innermost is 0, middle is 1, one in intake is 2
-    // Returns an int[] like [0, 1, 2] for firing order
-    public static int[] computeFireOrder(char[] queue, char[] desired) {
-        boolean[] used = new boolean[queue.length];
-        int[] order = new int[desired.length];
-        for (int i = 0; i < desired.length; i++) {
-            for (int j = 0; j < queue.length; j++) {
-                if (!used[j] && queue[j] == desired[i]) {
-                    order[i] = j;
-                    used[j] = true;
-                    break;
-                }
-            }
-        }
-        // Mutate order to enforce physical constraints
-        // --- Rule 1: Slot #2 cannot fire first ---
-        if (order[0] == 2) {
-            // find the first element that isn't 2 and swap
-            for (int i = order.length-1; i > 0; i--) {
-                if (order[i] != 2) {
-                    int temp = order[0];
-                    order[0] = order[i];
-                    order[i] = temp;
-                    break;
-                }
-            }
-        }
-
-        // --- Rule 2: If 1 is followed by 2, change 1 → 0 ---
-        for (int i = 0; i < order.length - 1; i++) {
-            if (i > 0) {
-                if (order[i] == 1 && order[i + 1] == 2) {
-                    order[i] = 0;
-                }
-                if (order[i] == 2 && order[i + 1] == 1) {
-                    order[i + 1] = 0;
-                }
-            }
-        }
-        return order;
+    public Pose PedroToFTC(Pose pose){
+        Pose normalizedPose = pose.minus(new Pose(72, 72));
+        return normalizedPose.rotate(Math.PI / 2, true);
     }
-    public static int[] Order = {0,1,2};
-
-
-    // ------------------------CALCULATE FEEDER FIRING SEQUENCE-------------------------------------
-//    public static Action shootSequence(AtomicBoolean shotReqFR, AtomicBoolean shotReqBL, AtomicBoolean slowIntakeAtomic,
-//                                       char[] queue, int obeliskID, int shot, OpModeState opModeState, Color color) {
-//
-//        char[] desired = getDesiredPattern(obeliskID);
-//        Order = computeFireOrder(queue, desired);
-//        // If feeder is not working, always shoot front one first
-//        if (Constants.friedFeed) Order = new int[]{1,2,0};
-//        if (!Constants.MINIMIZE_TELEMETRY) {
-//            RobotLog.a("Shohtott " + shot);
-//            RobotLog.d("Obelisk ID: " + obeliskID);
-//            RobotLog.d("balls in robot: ");
-//            display(queue);
-//            RobotLog.d("balls score order: ");
-//            display(desired);
-//            RobotLog.d("feeders move order: ");
-//            display(Order);
-//        }
-//        ArrayList<Action> actions = new ArrayList<>();
-//        if (opModeState == OpModeState.AUTO_FAR && color == Color.RED) {
-//            if (Order[0] == 0) {
-//                actions.add(new InstantAction(() -> Positions.flywheelPower = 2.15));
-//                actions.add(new InstantAction(() -> Constants.turretAngleOffset = -1 * Math.PI / 180));
-//            } else if (Order[0] == 1 || Order[0] == 2) {
-//                actions.add(new InstantAction(() -> Positions.flywheelPower = 2.338));
-//                actions.add(new InstantAction(() -> Constants.turretAngleOffset = 5 * Math.PI / 180));
-//            }
-//        }
-//        else if (opModeState == OpModeState.AUTO_FAR && color == Color.BLUE) {
-////            RobotLog.a("change first");
-//            if (Order[0] == 0) {
-//                actions.add(new InstantAction(() -> Positions.flywheelPower = 2.25));
-//                actions.add(new InstantAction(() -> Constants.turretAngleOffset = 6 * Math.PI / 180));
-//            } else if (Order[0] == 1 || Order[0] == 2) {
-//                actions.add(new InstantAction(() -> Positions.flywheelPower = 2.414));
-//                actions.add(new InstantAction(() -> Constants.turretAngleOffset = 8 * Math.PI / 180));
-//            }
-//        }
-//        if (opModeState == OpModeState.AUTO || opModeState == OpModeState.AUTO_FAR) {
-//            actions.add(new SleepAction(0.4));
-//        }
-//        for (int i = 0; i <= 2; i++) {
-//            int feeder = Order[i]; // Go through the firing order (eg. [0, 1, 2]) and set shot requests to true
-//            //TODO: modify for an intake pulse when firing slot 2. This will cause slot 1 to be displaced to slot 0. (push it in one slot)
-//            //The intake pulse has been changed to always occur before the second shot. This deterministically causes slot 2 to go to slot 1 and slot 1 to go to slot 0.
-//            if (i==1 /*feeder == 2*/) {
-//                actions.add(new InstantAction(() -> slowIntakeAtomic.set(true)));
-//                actions.add(new SleepAction(Constants.intakePulseTime));
-//                actions.add(new InstantAction(() -> slowIntakeAtomic.set(false)));
-//                actions.add(new SleepAction(Constants.intakeStabilizeTime));
-//            }
-//            if (i == 2 && (opModeState == OpModeState.AUTO || opModeState == OpModeState.AUTO_FAR)){
-//                actions.add(new SleepAction(0.4));
-//            }
-//            // then set shotReq booleans and the usual sleep/reset sequence
-//            actions.add(new InstantAction(() -> {
-//                if (feeder == 1 || feeder == 2) shotReqFR.set(true);  // 1, 2 = front/right feeder
-//                else shotReqBL.set(true);               // 0 = back/left feeder
-//            }));
-//            actions.add(new SleepAction(0.3)); // allow an interval of requesting in case the initial request is overridden
-//            actions.add(new InstantAction(() -> {
-//                shotReqFR.set(false);
-//                shotReqBL.set(false);
-//            }));
-//            if (opModeState == OpModeState.AUTO_FAR && color == Color.RED && i < 2) {
-//                if (Order[i + 1] == 1 || Order[i + 1] == 2) {
-//                    actions.add(new SleepAction(0.2));
-//                    actions.add(new InstantAction(() -> Positions.flywheelPower = 2.338));
-//                    actions.add(new InstantAction(() -> Constants.turretAngleOffset = 5 * Math.PI / 180));
-//                } else if (Order[i + 1] == 0) {
-//                    actions.add(new SleepAction(0.2));
-//                    actions.add(new InstantAction(() -> Positions.flywheelPower = 2.15));
-//                    actions.add(new InstantAction(() -> Constants.turretAngleOffset = -1 * Math.PI / 180));
-//                }
-//            }
-//            else if (opModeState == OpModeState.AUTO_FAR && color == Color.BLUE && i < 2) {
-////                RobotLog.a("change " + i);
-//                if (Order[i + 1] == 0) {
-//                    actions.add(new SleepAction(0.2));
-//                    actions.add(new InstantAction(() -> Positions.flywheelPower = 2.25));
-//                    actions.add(new InstantAction(() -> Constants.turretAngleOffset = 6 * Math.PI / 180));
-//                } else if (Order[i + 1] == 1 || Order[i+1] == 2) {
-//                    actions.add(new SleepAction(0.2));
-//                    actions.add(new InstantAction(() -> Positions.flywheelPower = 2.414));
-//                    actions.add(new InstantAction(() -> Constants.turretAngleOffset = 8 * Math.PI / 180));
-//                }
-//            }
-//            if (i != 2) actions.add(new SleepAction(0.6)); // feed`er completes the state machine
-//        }
-//        SequentialAction seq = new SequentialAction(actions);
-//        return seq;
-//    }
 
     public static void display(char[] arr){
         String message = "";

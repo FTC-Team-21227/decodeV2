@@ -19,7 +19,7 @@ public class Intake {
     //power
     public Intake(HardwareMap hardwareMap){
         INTAKE = new CachedMotor(hardwareMap.get(DcMotorEx.class, "intake"));
-        INTAKE.setDirection(DcMotorSimple.Direction.REVERSE);
+        INTAKE.setDirection(DcMotorSimple.Direction.FORWARD);
         INTAKE.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         INTAKE.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         INTAKE.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -31,9 +31,9 @@ public class Intake {
     }
     // Modes
     public void intake(){
-        if (!paused) {INTAKE.setPower(1* Robot.Constants.intakePower); TRANSFER.setPower(0 /*1* Robot.Constants.intakePower*/);}
+        if (!paused) {INTAKE.setPower(1* Robot.Constants.intakePower); TRANSFER.setPower(0.3 /*1* Robot.Constants.intakePower*/);}
         power1 = 1*Robot.Constants.intakePower;
-        power2 = 0;
+        power2 = 0.6;
     }
     public void slowIntake(){
         if (!paused) {INTAKE.setPower(1*Robot.Constants.slowIntakePower); TRANSFER.setPower(0 /*1* Robot.Constants.slowIntakePower*/);}

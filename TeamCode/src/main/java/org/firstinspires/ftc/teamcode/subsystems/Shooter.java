@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
@@ -30,6 +31,10 @@ public class Shooter {
     double flywheelVel;
     double hoodAngle;
     double turretAngle;
+    Pose pose;
+    Vector goalVector;
+    double goalVectorAngle;
+    double distance;
 
     public Shooter (HardwareMap hardwareMap){
         hood = new Hood(hardwareMap);
@@ -101,8 +106,8 @@ public class Shooter {
     //shooting that allows human adjustment and human feeding
     public void update(boolean shoot, boolean humanFeed, Pose robotPose, boolean flywheelUp, boolean flywheelDown, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight) {
         // Adjustment values, static so they can be easily accessed
-        if(flywheelUp) {Robot.Positions.flywheelPowerOffset += 5;}
-        if(flywheelDown) {Robot.Positions.flywheelPowerOffset -= 5;}
+        if(flywheelUp) {Robot.Positions.flywheelPowerOffset += 0.001;}
+        if(flywheelDown) {Robot.Positions.flywheelPowerOffset -= 0.001;}
         if(hoodUp) {Robot.Positions.hoodAngleManualOffset += Math.toRadians(1);}
         if(hoodDown) {Robot.Positions.hoodAngleManualOffset -= Math.toRadians(1);}
         if(turretLeft) {Robot.Positions.turretAngleManualOffset += Math.toRadians(1);}
@@ -115,10 +120,10 @@ public class Shooter {
         double flightTime = Math.sqrt(2 * deltaH / (p * g * (1 - p))); // Ball trajectory time from ground to ground
 
         // Calculate shot vector using TURRET's position on the robot and ROBOT's heading---
-        Pose pose = robotPose.plus(Robot.Constants.turretPos); // Turret's field-relative position
-        Vector goalVector = Robot.Positions.goalPos.minus(pose.getAsVector());
-        double distance = goalVector.getMagnitude(); // Horizontal distance
-        double goalVectorAngle = goalVector.getTheta(); // Angle
+        pose = robotPose.plus(Robot.Constants.turretPos); // Turret's field-relative position
+        goalVector = Robot.Positions.goalPos.minus(pose.getAsVector());
+        distance = goalVector.getMagnitude(); // Horizontal distance
+        goalVectorAngle = goalVector.getTheta(); // Angle
 
         // -----Calculate hood angle, flywheel velocity, and turret angle--------
         double theta = Math.atan(deltaH / (distance * (1 - p))); // Ball launch angle of elevation
@@ -137,9 +142,9 @@ public class Shooter {
 //        hoodAngle = point.angle;
         turretAngle = turretAngle+ Robot.Constants.turretAngleOffset+ Robot.Positions.turretAngleManualOffset;
 
-
         if (!shoot){
             flywheel.setPower(0);
+            turret.turnToRobotAngle(Math.toDegrees(turretAngle)); //TODO: delete
             //don't move hood and turret
         }
         else if (humanFeed) {
@@ -151,6 +156,7 @@ public class Shooter {
             flywheel.spinTo(flywheelVel);
             hood.turnToAngle(hoodAngle);
             turret.turnToRobotAngle(Math.toDegrees(turretAngle));
+//            RobotLog.a(""+Math.toDegrees(turretAngle));
         }
 //        telemetry.update();
     }
@@ -163,28 +169,31 @@ public class Shooter {
 //            telemetry.addData("human feed", humanFeed); //NOT IMPORTANT
 //            telemetry.addData("setPose", toggleLock); //NOT IMPORTANT
         }
-//        telemetry.addLine("robotTurretPose (inchxinchxdeg): " + robotPose.getX()+" "+robotPose.getY()+" "+robotPose.getHeading()); //NOT IMPORTANT
-//        telemetry.addLine("goalVector (inchxinch): " + goalVector.getXComponent()+" "+goalVector.getYComponent());
+        telemetry.addLine("robotTurretPose (inchxinchxdeg): " + pose.getX()+" "+pose.getY()+" "+pose.getHeading()); //NOT IMPORTANT
+        telemetry.addLine("goalVector (inchxinch): " + goalVector.getXComponent()+" "+goalVector.getYComponent());
         telemetry.addLine("goalPos (inchxinch): " + Robot.Positions.goalPos.getXComponent()+" "+ Robot.Positions.goalPos.getYComponent()); //NOT IMPORTANT
         if (!Robot.Constants.MINIMIZE_TELEMETRY) {
-//            telemetry.addData("goalVector angle (rad to deg)", Math.toDegrees(goalVectorAngle)); //NOT IMPORTANT
-//            telemetry.addData("distance to goal (inch)", distance); //NOT IMPORTANT
+            telemetry.addData("goalVector angle (rad to deg)", Math.toDegrees(goalVectorAngle)); //NOT IMPORTANT
+            telemetry.addData("distance to goal (inch)", distance); //NOT IMPORTANT
         }
-//        telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
+        telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
         telemetry.addData("turret angle offset (rad to deg)", Robot.Constants.turretAngleOffset*180/Math.PI);
         telemetry.addData("turret angle offset manual(rad to deg)", Robot.Positions.turretAngleManualOffset*180/Math.PI);
         if (!Robot.Constants.MINIMIZE_TELEMETRY) {
-            telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle() * 180 / Math.PI); //NOT IMPORTANT
+            telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle()); //NOT IMPORTANT
         }
+        telemetry.addData("turret angle", turret.getTurretRobotAngle());
+        telemetry.addData("turret current rotation", turret.turret.getCurrentAngle());
+        telemetry.addData("turret total rotation", turret.turret.getTotalRotation());
         telemetry.addData("turret pos", turret.turret.getCurrentAngle()); //NOT IMPORTANT
-//        telemetry.addData("hood theta (rad to deg)", theta*180/Math.PI);
+        telemetry.addData("hood theta (rad to deg)", hoodAngle*180/Math.PI);
         telemetry.addData("hood angle offset (rad to deg)", Robot.Constants.hoodAngleOffset*180/Math.PI);
         telemetry.addData("hood angle offset manual (rad to deg)", Robot.Positions.hoodAngleManualOffset*180/Math.PI);
         if (!Robot.Constants.MINIMIZE_TELEMETRY) {
             telemetry.addData("hood get angle (rad to deg)", hood.getAngle()); //NOT IMPORTANT
         }
         telemetry.addData("hood pos", hood.HOOD.getPosition()); //NOT IMPORTANT
-//        telemetry.addData("targetVel (rad/s to tick/s)", radps*28/Math.PI/2*(Robot.Positions.flywheelPower+ Robot.Positions.flywheelPowerOffset));
+        telemetry.addData("targetVel (rad/s to tick/s)", flywheelVel);
         if (!Robot.Constants.MINIMIZE_TELEMETRY) {
 //            telemetry.addData("targetVel (rad/s)", radps); //NOT IMPORTANT
         }
