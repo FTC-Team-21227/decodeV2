@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -17,6 +19,7 @@ public class LimelightApriltagTest extends OpMode{
 
     private Limelight3A limelight;
     private IMU imu;
+    private GoBildaPinpointDriver pinpoint;
 
     @Override
     public void init()
@@ -27,6 +30,9 @@ public class LimelightApriltagTest extends OpMode{
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD); // MIGHT CHANGE
         imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+//        pinpoint.setHeading(90, AngleUnit.DEGREES);
+        pinpoint.resetPosAndIMU();
     }
 
     @Override
@@ -39,22 +45,24 @@ public class LimelightApriltagTest extends OpMode{
     public void loop()
     {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        limelight.updateRobotOrientation(orientation.getYaw());
-        LLResult llResult = limelight.getLatestResult();
 
-        GoBildaPinpointDriver pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         pinpoint.update();
-        Pose2D pose2d = pinpoint.getPosition();
+        double heading = pinpoint.getHeading(AngleUnit.DEGREES);
+        limelight.updateRobotOrientation(heading);
+        LLResult llResult = limelight.getLatestResult();
 
         if (llResult!=null && llResult.isValid())
         {
             Pose3D botpose = llResult.getBotpose();
+            Pose3D botpose_mt2 = llResult.getBotpose_MT2();
             telemetry.addData("Tx", llResult.getTx());
             telemetry.addData("Ty", llResult.getTy());
             telemetry.addData("Ta", llResult.getTa());
-            telemetry.addData("BotPose", botpose.toString());
+            telemetry.addData("BotPose", botpose.getPosition().toUnit(DistanceUnit.INCH).toString() + "\n" + botpose.getOrientation().toString());
+            telemetry.addData("BotPose MT2", botpose_mt2.getPosition().toUnit(DistanceUnit.INCH).toString() + "\n" + botpose_mt2.getOrientation().toString());
         }
         else {
+            telemetry.addData("pinpoint heading", heading);
             telemetry.addLine("NO TAG DETECTED");
         }
 

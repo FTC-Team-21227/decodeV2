@@ -25,12 +25,12 @@ public class Flywheel {
     //power
     public Flywheel(HardwareMap hardwareMap){
         FLYWHEEL_MASTER = new CachedMotor(hardwareMap.get(DcMotorEx.class,"flywheel"));
-        FLYWHEEL_MASTER.setDirection(DcMotorSimple.Direction.REVERSE);
+        FLYWHEEL_MASTER.setDirection(DcMotorSimple.Direction.FORWARD);
         FLYWHEEL_MASTER.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         FLYWHEEL_MASTER.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         FLYWHEEL_MASTER.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         FLYWHEEL2 = new CachedMotor(hardwareMap.get(DcMotorEx.class,"flywheel2"));
-        FLYWHEEL2.setDirection(DcMotorSimple.Direction.FORWARD);
+        FLYWHEEL2.setDirection(DcMotorSimple.Direction.REVERSE);
         FLYWHEEL2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         FLYWHEEL2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         FLYWHEEL2.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);

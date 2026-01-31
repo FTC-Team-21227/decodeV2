@@ -83,12 +83,12 @@ public class RTPAxon {
         STARTPOS = stableAngle;
         previousAngle = stableAngle;
         homeAngle = stableAngle;
-        totalRotation = 0;
+        totalRotation = stableAngle;
 
         // Default PID coefficients
-        kP = 0.01;
-        kI = 0.0001;
-        kD = 0.001;
+        kP = 0.005;
+        kI = 0.00001;
+        kD = 0.0001;
         integralSum = 0.0;
         lastError = 0.0;
         maxIntegralSum = 100.0;
@@ -121,7 +121,8 @@ public class RTPAxon {
     public double getKI() { return kI; }
     public double getKD() { return kD; }
     public void changeTargetRotation(double change) { targetRotation += change; }
-    public void setTargetRotation(double target) { targetRotation = target; resetPID(); }
+    public void setTargetRotation(double target) { targetRotation = target; /*resetPID();*/ }
+    public void resetTargetRotation(double target) { targetRotation = target; resetPID(); }
     public boolean isAtTarget(double tolerance) { return Math.abs(targetRotation - totalRotation) < tolerance; }
     public void resetPID() { resetIntegral(); lastError = 0; pidTimer.reset(); }
     public void resetIntegral() { integralSum = 0; }
@@ -133,6 +134,28 @@ public class RTPAxon {
         if (direction == Direction.REVERSE) angle = -angle;
         return angle;
     }
+
+    public double getTotalRotation(){
+        // low pass filter
+        double rawAngle = getCurrentAngle();
+//        double currentAngle = ALPHA * rawAngle + (1 - ALPHA) * previousAngle;
+        double currentAngle = rawAngle;
+
+        // multiple turns
+        double angleDifference = currentAngle - previousAngle;
+        if (angleDifference > 180) { angleDifference -= 360; cliffs--; }
+        else if (angleDifference < -180) { angleDifference += 360; cliffs++; }
+
+        // update rotation
+        totalRotation = currentAngle /*- homeAngle*/ + cliffs * 360;
+        previousAngle = currentAngle;
+        return totalRotation;
+    }
+    public double totalRotation(){
+        return totalRotation;
+    }
+
+
 
     // Main update loop
     public synchronized void update() {
@@ -147,7 +170,7 @@ public class RTPAxon {
         else if (angleDifference < -180) { angleDifference += 360; cliffs++; }
 
         // update rotation
-        totalRotation = currentAngle - homeAngle + cliffs * 360;
+        totalRotation = currentAngle /*- homeAngle*/ + cliffs * 360;
         previousAngle = currentAngle;
 
         if (!rtp) return;

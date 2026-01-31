@@ -15,11 +15,10 @@ public class Stopper {
         STOPPER.scaleRange(0, 1); //open = , close =
     }
     public void open(){
-//        STOPPER.setPosition(Robot.Constants.stopperScale0);
+        STOPPER.setPosition(Robot.Constants.stopperScale0);
     }
     public void close(){
-
-//        STOPPER.setPosition(Robot.Constants.stopperScale1);
+        STOPPER.setPosition(Robot.Constants.stopperScale1);
     }
 
 }

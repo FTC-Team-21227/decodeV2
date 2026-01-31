@@ -19,18 +19,43 @@ public class AutoRedClose extends OpMode {
     private Robot.AprilFollower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
 
-    private int pathState;
-
+    private enum PathState{
+        START,
+        SCOREPRELOAD,
+        SCORINGPRELOAD,
+        PICKUP1,
+        SCORE1,
+        SCORING1,
+        PICKUP2,
+        SCORE2,
+        SCORING2,
+        PICKUPGATE1,
+        SCOREGATE1,
+        SCORINGGATE1,
+        PICKUPGATE2,
+        SCOREGATE2,
+        SCORINGGATE2,
+        PICKUP3,
+        SCORE3,
+        SCORING3,
+        PARK,
+        DONE
+    }
+    private PathState pathState;
+    private int intakeState;
+    private boolean intake;
+    private boolean shoot;
     private final Pose startPose = new Pose(20+2*(72-20), 114, Math.toRadians(0)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(60+2*(72-60), 85, Math.toRadians(45)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose pickup1Pose = new Pose(25+2*(72-25), 85, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Pose = new Pose(25+2*(72-25), 62, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = new Pose(25+2*(72-25), 39, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickup4Pose = new Pose(20+2*(72-20), 66, Math.toRadians(45)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickupGatePose = new Pose(20+2*(72-20), 66, Math.toRadians(45)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose parkPose = new Pose(60, 78, Math.toRadians(45));
 
     private Path scorePreload;
     private PathChain grabPickup1,  grabPickup2,  grabPickup3;
-    private Path scorePickup1, scorePickup2, scorePickup3, scorePickup4, grabPickup4, scorePickup5, grabPickup5;
+    private Path scorePickup1, scorePickup2, scorePickup3, scoreGate1, grabGate1, scoreGate2, grabGate2, park;
 
     boolean reset = true;
     public void buildPaths() {
@@ -82,28 +107,33 @@ public class AutoRedClose extends OpMode {
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup3 = new Path(new BezierLine(pickup3Pose, scorePose));
         scorePickup3.setLinearHeadingInterpolation(pickup3Pose.getHeading(),scorePose.getHeading());
-        grabPickup4 = new Path(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickup4Pose));
-                grabPickup4.setConstantHeadingInterpolation(pickup4Pose.getHeading());
+        grabGate1 = new Path(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose));
+                grabGate1.setConstantHeadingInterpolation(pickupGatePose.getHeading());
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup4 = new Path(new BezierCurve(pickup4Pose, new Pose(40+2*(72-40),50,0), scorePose));
-        scorePickup4.setLinearHeadingInterpolation(pickup4Pose.getHeading(),scorePose.getHeading());
-        grabPickup5 = new Path(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickup4Pose));
-        grabPickup5.setConstantHeadingInterpolation(pickup4Pose.getHeading());
+        scoreGate1 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate1.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
+        grabGate2 = new Path(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose));
+        grabGate2.setConstantHeadingInterpolation(pickupGatePose.getHeading());
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup5 = new Path(new BezierCurve(pickup4Pose, new Pose(40+2*(72-40),50,0), scorePose));
-        scorePickup5.setLinearHeadingInterpolation(pickup4Pose.getHeading(),scorePose.getHeading());
+        scoreGate2 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate2.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
+
+        park = new Path(new BezierLine(scorePose, parkPose));
+        park.setConstantHeadingInterpolation(parkPose.getHeading());
+
     }
 
     public void autonomousPathUpdate() {
         switch (pathState) {
-            case 0:
+            case START:
                 follower.followPath(scorePreload);
-                setPathState(1);
+                intake = false;
+                shoot = false;
+                setPathState(PathState.SCOREPRELOAD);
                 break;
-            case 1:
-
+            case SCOREPRELOAD:
             /* You could check for
             - Follower State: "if(!follower.isBusy()) {}"
             - Time: "if(pathTimer.getElapsedTimeSeconds() > 1) {}"
@@ -113,118 +143,171 @@ public class AutoRedClose extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
                     /* Score Preload */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup1, true);
-                    setPathState(2);
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORINGPRELOAD);
                 }
                 break;
-            case 2:
+            case SCORINGPRELOAD:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
+                    follower.followPath(grabPickup1, true);
+                    setPathState(PathState.PICKUP1);
+                }
+                break;
+            case PICKUP1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
                 if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    intake = false;
+                    /* Move to Score Balls */
                     follower.followPath(scorePickup1, true);
-                    setPathState(3);
+                    setPathState(PathState.SCORE1);
                 }
                 break;
-            case 3:
+            case SCORE1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
-                    /* Score Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2, true);
-                    setPathState(4);
+                    /* Score Balls */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORING1);
                 }
                 break;
-            case 4:
+            case SCORING1:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
+                    follower.followPath(grabPickup2, true);
+                    setPathState(PathState.PICKUP2);
+                }
+                break;
+            case PICKUP2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if (!follower.isBusy()) {
                     /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    intake = false;
+                    /* Move to Score Balls */
                     follower.followPath(scorePickup2, true);
-                    setPathState(5);
+                    setPathState(PathState.SCORE2);
                 }
                 break;
-            case 5:
+            case SCORE2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
-                    /* Score Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    /* Score Balls */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORING2);
+                }
+                break;
+            case SCORING2:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
+                    follower.followPath(grabGate1, true);
+                    setPathState(PathState.PICKUPGATE1);
+                }
+                break;
+            case PICKUPGATE1:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
+                if (!follower.isBusy()) {
+                    intake = false;
+                    /* Move to Score Balls */
+                    follower.followPath(scoreGate1, true);
+                    setPathState(PathState.SCOREGATE1);
+                }
+                break;
+            case SCOREGATE1:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
+                if (!follower.isBusy()) {
+                    /* Grab Sample */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORINGGATE1);
+                }
+                break;
+            case SCORINGGATE1:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
+                    follower.followPath(grabGate2, true);
+                    setPathState(PathState.PICKUPGATE2);
+                }
+                break;
+            case PICKUPGATE2:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
+                if (!follower.isBusy()) {
+                    intake = false;
+                    /* Move to Score Balls */
+                    follower.followPath(scoreGate2, true);
+                    setPathState(PathState.SCOREGATE2);
+                }
+                break;
+            case SCOREGATE2:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
+                if (!follower.isBusy()) {
+                    /* Grab Sample */
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORINGGATE2);
+                }
+                break;
+            case SCORINGGATE2:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
+                    /* Move to Intake Balls */
                     follower.followPath(grabPickup3, true);
-                    setPathState(6);
+                    setPathState(PathState.PICKUP3);
                 }
                 break;
-            case 6:
+            case PICKUP3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    intake = false;
+                    /* Move to Score Balls */
                     follower.followPath(scorePickup3, true);
-                    setPathState(7);
+                    setPathState(PathState.SCORE3);
                 }
                 break;
-            case 7:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(grabPickup4, true);
-                    setPathState(8);
-                }
-                break;
-            case 8:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(scorePickup4, true);
-                    setPathState(9);
-                }
-                break;
-            case 9:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(grabPickup5, true);
-                    setPathState(10);
-                }
-                break;
-            case 10:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if (!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(scorePickup5, true);
-                    setPathState(11);
-                }
-                break;
-            case 11:
+            case SCORE3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
-                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                    setPathState(-1);
+                    shoot = true;
+                    pathTimer.resetTimer();
+                    setPathState(PathState.SCORING3);
                 }
                 break;
+            case SCORING3:
+                if (pathTimer.getElapsedTimeSeconds() > 1){
+                    shoot = false;
+                    follower.followPath(park, true);
+                    setPathState(PathState.PARK);
+                }
+                break;
+            case PARK:
+                if (!follower.isBusy()){
+                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */
+                    setPathState(PathState.DONE);
+                }
         }
     }
 
     /**
      * These change the states of the paths and actions. It will also reset the timers of the individual switches
      **/
-    public void setPathState(int pState) {
+    public void setPathState(PathState pState) {
         pathState = pState;
         pathTimer.resetTimer();
+    }
+    public void setIntakeState(int iState) {
+        intakeState = iState;
+        actionTimer.resetTimer();
     }
 
     /**
@@ -235,6 +318,9 @@ public class AutoRedClose extends OpMode {
 
         // These loop the movements of the robot, these must be called continuously in order to work
         follower.update();
+//        robot.updateBallDetector();
+        robot.updateIntake(intake, false, !intake, shoot, telemetry);
+        robot.updateShooter(telemetry, true, true, false, false, false, false, null, 0,false,false,false,false);
         autonomousPathUpdate();
         //autonomousSubsystemsUpdate();
         // Feedback to Driver Hub for debugging
@@ -252,7 +338,7 @@ public class AutoRedClose extends OpMode {
     public void init() {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
-        opmodeTimer.resetTimer();
+        actionTimer = new Timer();
 
         robot = new Robot(startPose, Robot.Color.RED);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
@@ -277,7 +363,8 @@ public class AutoRedClose extends OpMode {
     @Override
     public void start() {
         opmodeTimer.resetTimer();
-        setPathState(0);
+        setPathState(PathState.START);
+        setIntakeState(0);
     }
 
     /**

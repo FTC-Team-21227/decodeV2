@@ -7,9 +7,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 @TeleOp
 public class TeleopNew extends OpMode {
+//    Turret turret;
     Robot robot;
     boolean intake = false; //false = stop, true = intake
     boolean setPose = false;
@@ -24,7 +26,8 @@ public class TeleopNew extends OpMode {
 //    Telemetry telemetry = dashboard.getTelemetry();
     JoinedTelemetry joinedTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(),telemetry);
     public void init(){
-        robot = Robot.getInstance(new Pose(0,0, Math.PI), Robot.Color.BLUE); //start facing the goals, RED poses
+//        turret = new Turret (hardwareMap);
+        robot = Robot.getInstance(new Pose(72,72, Math.PI/2), Robot.Color.RED); //start facing the goals, RED poses
         robot.initTeleop(hardwareMap, telemetry);
 //        robot.turret.turnToRobotAngle(0);
 //        robot.hood.turnToAngle(Math.toRadians(45));
@@ -59,12 +62,16 @@ public class TeleopNew extends OpMode {
         LT = gamepad2.left_trigger > 0.1;
 //        robot.updateVoltage(telemetry);
         //final: back = relocalize
-        robot.updateFollower(false, gamepad1.touchpadWasPressed(), joinedTelemetry);
+        robot.updateFollower(gamepad1.startWasPressed(), gamepad1.touchpadWasPressed(), joinedTelemetry);
         //final version will be: LB = intake toggle, LT = reverse, RB = shoot request, RT = shoot 1
         robot.updateIntake(lb, gamepad1.left_trigger > 0.1, lb, gamepad1.right_bumper, joinedTelemetry);
         robot.setGoalTarget();
         //final version will be: a = spinup request, b = idle request, x = toggle setPose => shooter lock/manual control, rightstick up/down = flywheel scale, dpad up/down= hood, dpad left/right = turret, gamepad2 y = human feed toggle, start = power flywheel off, gamepad2 bumpers and triggers , gamepad2 a = velocity correction
         robot.updateShooter(joinedTelemetry,gamepad1.right_bumper, gamepad1.a, human, setPose, gamepad1.b, moveShot, null, gamepad1.right_stick_y + gamepad2.right_stick_y, gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed(), gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed(), gamepad1.dpadLeftWasPressed() || gamepad2.dpadLeftWasPressed(), gamepad1.dpadRightWasPressed() || gamepad2.dpadRightWasPressed());
+//        robot.shooter.turret.turnToRobotAngle(-44);
+        //        robot.updateTurret(telemetry);
+        robot.calculateShooter(telemetry, false);
+//        turret.turnToRobotAngle(-10);
         //final: toggle left stick button = slow mode, toggle y = p2p drive but it stops on its own
         p2p = robot.driveTele(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, slow, p2p);
 //        robot.drive2.drawPose(packet);
