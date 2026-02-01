@@ -47,34 +47,7 @@ public class Shooter {
         Pose turretPose = robotPose.plus(Robot.Constants.turretPos);
         return Robot.Constants.goalPos.minus(turretPose.getAsVector());
     }
-
-//    public double calculateFlywheelVel(Pose robotPose) {
-//        double goalDistance = getGoalVector(robotPose).getMagnitude();
-//        double theta = Math.atan(DELTA_H / (goalDistance * (1 - P))); // Ball launch angle of elevation
-//        double flightTime = Math.sqrt(2 * DELTA_H / (p * g * (1 - p))); // Ball trajectory time from ground to ground
-//
-//        double launchVel = goalDistance / (P * FLIGHT_TIME * Math.cos(theta));
-//        double radps = launchVel / FLYWHEEL_RADIUS;
-//        // Return flywheel velocity
-//        return radps * (Robot.Positions.flywheelPower + Robot.Positions.flywheelPowerOffset) * FLYWHEEL_TICKS_PER_REV / (Math.PI * 2);
-//    }
-//
-//    public double calculateHoodAngle(Pose robotPose) {
-//        double goalDistance = getGoalVector(robotPose).getMagnitude();
-//        // Calculate angle in radians
-//        double theta = Math.atan(DELTA_H / (goalDistance * (1 - P))); // Ball launch angle of elevation
-//        // Add offsets
-//        return theta + Robot.Constants.hoodAngleOffset + Robot.Positions.hoodAngleManualOffset;
-//
-//    }
-//
-//    public double calculateTurretAngle(Pose robotPose) {
-//        double goalVectorAngle = getGoalVector(robotPose).getTheta();
-//        // Calculate angle
-//        double turretAngle = goalVectorAngle - robotPose.getHeading();
-//        // Add offsets
-//        return turretAngle + Robot.Constants.turretAngleOffset + Robot.Positions.turretAngleManualOffset;
-//    }
+    
 
     // Adjust the robot Pose based on its current movement
     public Pose adjustMovementPose(Pose robotPose, Vector linearVel, double angularVel) {
@@ -93,15 +66,6 @@ public class Shooter {
     public boolean isAimed(){
         return Math.abs(flywheel.getVel() - flywheelVel) < 50 && Math.abs(turret.getTurretRobotAngle() - turretAngle) < 0.1; //incl servo angles later IF we use axon
     }
-//    // Shoots a specific number of times in auton
-//    public void autonShoot(Pose robotPose, int shotRequestCount) {
-//        double flywheelVel = calculateFlywheelVel(robotPose);
-//        double turretAngle = calculateTurretAngle(robotPose);
-//        double hoodAngle = calculateHoodAngle(robotPose);
-//        for (int i = 0; i < shotRequestCount; i++) {
-//            shootSequence(flywheelVel, hoodAngle, turretAngle);
-//        }
-//    }
 
     //shooting that allows human adjustment and human feeding
     public void update(boolean shoot, boolean humanFeed, Pose robotPose, boolean flywheelUp, boolean flywheelDown, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight) {
