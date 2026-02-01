@@ -57,13 +57,7 @@ public class ShooterSystem {
 
     public static ShooterLookupTable createDefaultTable() {
         return new ShooterLookupTable(List.of( // TUNE DATA
-                new ShooterPoint(24, 2800, 0.32),
-                new ShooterPoint(30, 2950, 0.34),
-                new ShooterPoint(38, 3150, 0.37),
-                new ShooterPoint(48, 3400, 0.41),
-                new ShooterPoint(54, 3550, 0.44),
-                new ShooterPoint(58, 3650, 0.46),
-                new ShooterPoint(62, 3750, 0.48),
+                new ShooterPoint(2, 2800, 0.32),
                 new ShooterPoint(72, 3950, 0.52)
         ));
     }

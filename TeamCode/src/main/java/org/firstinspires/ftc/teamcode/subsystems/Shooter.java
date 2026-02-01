@@ -202,4 +202,16 @@ public class Shooter {
             telemetry.addData("motorSpeed (tick/s to rad/s)", flywheel.getVel() * 2 * Math.PI / 28); //NOT IMPORTANT
         }
     }
+
+    public Hood getHood() {
+        return hood;
+    }
+
+    public Turret getTurret() {
+        return turret;
+    }
+
+    public Flywheel getFlywheel() {
+        return flywheel;
+    }
 }

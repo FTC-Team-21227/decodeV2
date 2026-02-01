@@ -120,4 +120,19 @@ public class Limelight {
             telemetry.addData("Limelight", "No Targets");
         }
     }
+    public double getDistanceToGoal() {
+        LLResult result = limelight.getLatestResult();
+        if (result == null || !result.isValid()) return -1;
+
+        final double cameraHeightInches = 8.0;      // inches
+        final double goalHeightInches = 56.0;
+        double limelightMountAngleDegrees = 0;
+
+        double ty = result.getTy(); // vertical offset in degrees
+        double angleToGoalDegrees = limelightMountAngleDegrees + ty;
+        double angleToGoalRadians = Math.toRadians(angleToGoalDegrees);
+
+        double distanceFromLimelightToGoalInches = (goalHeightInches - cameraHeightInches)/Math.tan(angleToGoalRadians);
+        return distanceFromLimelightToGoalInches;
+    }
 }
