@@ -3,14 +3,9 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Robot;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 
 public class Shooter {
@@ -20,9 +15,7 @@ public class Shooter {
     public ShooterSystem.ShooterLookupTable table;
 
     // CONSTANTS
-    public double P = 0.65; // Fraction of time along trajectory from ground to ground
-    public double G = 386.22;
-    final double DELTA_H = Robot.Constants.deltaH; // Height difference from shooter to goal
+    final double G = 386.22;
 //    final double FLIGHT_TIME = Robot.Constants.; // Ball trajectory time from ground to ground flight time isn't a constant
 //    double FLYWHEEL_MIN_VEL = Robot.Constants.FLYWHEEL_MIN_VEL;
 //    final double FLYWHEEL_RADIUS = Robot.Constants.FLYWHEEL_RADIUS;
@@ -45,7 +38,7 @@ public class Shooter {
     // METHODS
     public Vector getGoalVector(Pose robotPose) {
         Pose turretPose = robotPose.plus(Robot.Constants.turretPos);
-        return Robot.Constants.goalPos.minus(turretPose.getAsVector());
+        return Robot.Positions.goalPos.minus(turretPose.getAsVector());
     }
 
 //    public double calculateFlywheelVel(Pose robotPose) {
@@ -114,8 +107,8 @@ public class Shooter {
         if(turretRight) {Robot.Positions.turretAngleManualOffset -= Math.toRadians(1);}
 
         // ------------------------Shooting trajectory values-----------------------
-        double p = 0.65; // Fraction of time along trajectory from ground to ground
-        double g = 386.22; // Gravity (in/s^2)
+        double p = 0.65; //Robot.Positions.p; // Fraction of time along trajectory from ground to ground
+        double g = G; // Gravity (in/s^2)
         double deltaH = Robot.Positions.deltaH; // Height difference from shooter to goal
         double flightTime = Math.sqrt(2 * deltaH / (p * g * (1 - p))); // Ball trajectory time from ground to ground
 
@@ -144,7 +137,7 @@ public class Shooter {
 
         if (!shoot){
             flywheel.setPower(0);
-            turret.turnToRobotAngle(Math.toDegrees(turretAngle)); //TODO: delete
+//            turret.turnToRobotAngle(Math.toDegrees(turretAngle)); //TODO: delete
             //don't move hood and turret
         }
         else if (humanFeed) {
@@ -155,7 +148,7 @@ public class Shooter {
         else {
             flywheel.spinTo(flywheelVel);
             hood.turnToAngle(hoodAngle);
-            turret.turnToRobotAngle(Math.toDegrees(turretAngle));
+            turret.turnToRobotAngle(turretAngle);
 //            RobotLog.a(""+Math.toDegrees(turretAngle));
         }
 //        telemetry.update();
@@ -183,9 +176,9 @@ public class Shooter {
             telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle()); //NOT IMPORTANT
         }
         telemetry.addData("turret angle", turret.getTurretRobotAngle());
-        telemetry.addData("turret current rotation", turret.turret.getCurrentAngle());
-        telemetry.addData("turret total rotation", turret.turret.getTotalRotation());
-        telemetry.addData("turret pos", turret.turret.getCurrentAngle()); //NOT IMPORTANT
+//        telemetry.addData("turret current rotation", turret.turret.getCurrentAngle());
+//        telemetry.addData("turret total rotation", turret.turret.getTotalRotation());
+        telemetry.addData("turret pos", turret.turret.getPosition()); //NOT IMPORTANT
         telemetry.addData("hood theta (rad to deg)", hoodAngle*180/Math.PI);
         telemetry.addData("hood angle offset (rad to deg)", Robot.Constants.hoodAngleOffset*180/Math.PI);
         telemetry.addData("hood angle offset manual (rad to deg)", Robot.Positions.hoodAngleManualOffset*180/Math.PI);

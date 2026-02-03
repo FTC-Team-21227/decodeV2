@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Robot;
@@ -14,33 +13,30 @@ import org.firstinspires.ftc.teamcode.lib.CachedServo;
 
 //two CR axons and 1 analog input
 public class Turret {
-    public RTPAxon turret;
+    public CachedServo turret;
     public CRServo turret2; //make this cached later
-    public static double current_angle = 0;
+    public static double last_pos = 0;
 
     public Turret(HardwareMap hardwareMap){
-        turret = new RTPAxon(hardwareMap.get(CRServo.class,"turret"), hardwareMap.get(AnalogInput.class, "turretEncoder")); //make it cached servo later
+        turret = new CachedServo(hardwareMap.get(Servo.class,"turret"));
+//        turret.setDirection(Servo.Direction.REVERSE);
         turret2 = hardwareMap.get(CRServo.class, "turret2");
-//        turret.scaleRange(0,1); // 0 = +90 deg, 1 = -330 deg; DOUBLE CHECK
+        turret.scaleRange(0,1); // 0 = +90 deg, 1 = -330 deg; DOUBLE CHECK
     }
 
-    // Turns turret to the robot-relative angle in degrees
+    // Turns turret to the robot-relative angle in radians
     public void turnToRobotAngle(double angle) {
-        angle = AngleUnit.normalizeDegrees(angle- Robot.Constants.turretTargetRangeOffset) + Robot.Constants.turretTargetRangeOffset;
-//        turret.setTargetRotation(constrain(Range.scale(angle,Robot.Constants.turretLowAngle,Robot.Constants.turretHighAngle,Robot.Constants.turretScale0,Robot.Constants.turretScale1)));
-//        double thing = constrain(angle - Robot.Constants.turretAngleOffset)/Robot.Constants.turretGearRatio;
-//        RobotLog.a("" + thing);
-        turret.setTargetRotation(constrain(angle - Robot.Constants.turretAngleOffset)/Robot.Constants.turretGearRatio);
-        turret.update();
-        turret2.setPower(turret.getPower());
-        current_angle = turret.totalRotation() * Robot.Constants.turretGearRatio + Robot.Constants.turretAngleOffset;
+        angle = AngleUnit.normalizeRadians(angle- Robot.Constants.turretTargetRangeOffset) + Robot.Constants.turretTargetRangeOffset;
+        double current_pos = constrain(Range.scale(angle,Robot.Constants.turretLowAngle,Robot.Constants.turretHighAngle,Robot.Constants.turretScale0,Robot.Constants.turretScale1));
+        turret.setPosition(current_pos);
+//        if (Math.abs(current_pos - last_pos) > 0.05)
+//            turret2.setPower(Math.signum(current_pos-last_pos)); //check direction of this before
+//        last_pos = current_pos;
     }
 
-    // Gives turret's robot-relative angle (in degrees)
+    // Gives turret's robot-relative angle (in radians)
     public double getTurretRobotAngle() {
-        return turret.getTotalRotation() * Robot.Constants.turretGearRatio + Robot.Constants.turretAngleOffset;
-        //current_angle;
-//        return Range.scale(turret.getCurrentAngle(), Robot.Constants.turretScale0,Robot.Constants.turretScale1,Robot.Constants.turretLowAngle,Robot.Constants.turretHighAngle);
+        return Range.scale(turret.getPosition(), Robot.Constants.turretScale0,Robot.Constants.turretScale1,Robot.Constants.turretLowAngle,Robot.Constants.turretHighAngle);
     }
 
     // Gives turret's robot-relative pose based on its position and current heading

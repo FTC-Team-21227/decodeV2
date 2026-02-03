@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.tuning;
 //import com.acmerobotics.dashboard.FtcDashboard;
 //import com.acmerobotics.dashboard.config.Config;
 //import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -12,10 +13,11 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Voltage;
 
-
-@TeleOp (name = "TuneNewFlywheel")
+@Config
+@TeleOp
 /**
  * runs two flywheel motors
  */
@@ -24,26 +26,32 @@ public class TuneLookupTale extends LinearOpMode {
     Hood h;
     Voltage v;
     Robot r;
+    Intake i;
     public static int targetVel = 0;
     public static double power1 = 0;
     public static double power2 = 0;
-    double HoodPos=0;
+    double HoodPos=0.50;
 
     public void runOpMode(){
 //        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         f = new Flywheel(hardwareMap);
         v = new Voltage(hardwareMap.get(VoltageSensor.class,"Control Hub"));
         r = new Robot(new Pose(0,0,0), Robot.Color.RED);
+        i = new Intake(hardwareMap);
+        h = new Hood(hardwareMap);
         r.initFollower(hardwareMap, telemetry);
         waitForStart();
         while (opModeIsActive()){
             double k = 0;
             if (gamepad1.rightBumperWasPressed()){
-                targetVel += 10;
+                i.intake();
             }
             if (gamepad1.leftBumperWasPressed()){
 //                power2 += 0.01;
-                targetVel -= 10;
+                i.shoot();
+            }
+            if (gamepad1.xWasPressed()){
+                i.stop();
             }
             if (gamepad1.dpadUpWasPressed()) { // Increase hood position
                 HoodPos += 0.01;
@@ -66,12 +74,14 @@ public class TuneLookupTale extends LinearOpMode {
                 f.spinTo(targetVel);
             }
             r.updateFollower(false,false,telemetry);
-            r.calculateShooter(telemetry,false);
+//            r.calculateShooter(telemetry,false);
             telemetry.addData("power 1", f.FLYWHEEL_MASTER.getPower());
             telemetry.addData("power 2", f.FLYWHEEL2.getPower());
             telemetry.addData("target v", targetVel);
             telemetry.addData("motor v", f.getVel());
             telemetry.addData("hood pos", HoodPos);
+//            telemetry.addData("x", r.follower.getPose().getX());
+//            telemetry.addData("y", r.follower.getPose().getY());
 //            telemetry.addData("field pos", p.getPosition().toString());
             telemetry.addData("motor volts", k);
             telemetry.update();

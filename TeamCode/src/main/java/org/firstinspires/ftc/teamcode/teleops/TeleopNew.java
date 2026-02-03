@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.geometry.Pose;
@@ -7,7 +9,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 @TeleOp
 public class TeleopNew extends OpMode {
@@ -24,10 +25,10 @@ public class TeleopNew extends OpMode {
     boolean disableFlywheel = false;
 //    FtcDashboard dashboard = FtcDashboard.getInstance();
 //    Telemetry telemetry = dashboard.getTelemetry();
-    JoinedTelemetry joinedTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(),telemetry);
+    MultipleTelemetry joinedTelemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(),telemetry);
     public void init(){
 //        turret = new Turret (hardwareMap);
-        robot = Robot.getInstance(new Pose(72,72, Math.PI/2), Robot.Color.RED); //start facing the goals, RED poses
+        robot = Robot.getInstance(new Pose(72,72, Math.PI/2), Robot.Color.BLUE); //start facing the goals, RED poses
         robot.initTeleop(hardwareMap, telemetry);
 //        robot.turret.turnToRobotAngle(0);
 //        robot.hood.turnToAngle(Math.toRadians(45));
@@ -62,6 +63,7 @@ public class TeleopNew extends OpMode {
         LT = gamepad2.left_trigger > 0.1;
 //        robot.updateVoltage(telemetry);
         //final: back = relocalize
+        robot.reportBatteryDraw(joinedTelemetry);
         robot.updateFollower(gamepad1.startWasPressed(), gamepad1.touchpadWasPressed(), joinedTelemetry);
         //final version will be: LB = intake toggle, LT = reverse, RB = shoot request, RT = shoot 1
         robot.updateIntake(lb, gamepad1.left_trigger > 0.1, lb, gamepad1.right_bumper, joinedTelemetry);
@@ -70,7 +72,7 @@ public class TeleopNew extends OpMode {
         robot.updateShooter(joinedTelemetry,gamepad1.right_bumper, gamepad1.a, human, setPose, gamepad1.b, moveShot, null, gamepad1.right_stick_y + gamepad2.right_stick_y, gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed(), gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed(), gamepad1.dpadLeftWasPressed() || gamepad2.dpadLeftWasPressed(), gamepad1.dpadRightWasPressed() || gamepad2.dpadRightWasPressed());
 //        robot.shooter.turret.turnToRobotAngle(-44);
         //        robot.updateTurret(telemetry);
-        robot.calculateShooter(telemetry, false);
+//        robot.calculateShooter(telemetry, false);
 //        turret.turnToRobotAngle(-10);
         //final: toggle left stick button = slow mode, toggle y = p2p drive but it stops on its own
         p2p = robot.driveTele(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, slow, p2p);

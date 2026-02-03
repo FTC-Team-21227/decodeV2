@@ -47,7 +47,7 @@ public class LimelightApriltagTest extends OpMode{
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
 
         pinpoint.update();
-        double heading = pinpoint.getHeading(AngleUnit.DEGREES);
+        double heading = 90- pinpoint.getHeading(AngleUnit.DEGREES);
         limelight.updateRobotOrientation(heading);
         LLResult llResult = limelight.getLatestResult();
 

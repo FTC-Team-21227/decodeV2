@@ -10,8 +10,8 @@ import org.firstinspires.ftc.teamcode.lib.CachedMotor;
 
 public class Intake {
     //power
-    CachedMotor INTAKE;
-    CachedMotor TRANSFER;
+    public CachedMotor INTAKE;
+    public CachedMotor TRANSFER;
     double power1 = 0;
     double power2 = 0;
     boolean paused = false;
@@ -33,7 +33,7 @@ public class Intake {
     public void intake(){
         if (!paused) {INTAKE.setPower(1* Robot.Constants.intakePower); TRANSFER.setPower(0.3 /*1* Robot.Constants.intakePower*/);}
         power1 = 1*Robot.Constants.intakePower;
-        power2 = 0.6;
+        power2 = 0.65;
     }
     public void slowIntake(){
         if (!paused) {INTAKE.setPower(1*Robot.Constants.slowIntakePower); TRANSFER.setPower(0 /*1* Robot.Constants.slowIntakePower*/);}

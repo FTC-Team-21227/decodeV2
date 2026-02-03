@@ -20,7 +20,7 @@ public class Hood {
 
     public void setPosition( double pos){
         HOOD.setPosition(clip(scale(pos)));
-        RobotLog.a("" +clip(scale(pos)));
+//        RobotLog.a("" +clip(scale(pos)));
     }
     //Sets hood position to a certain angle (relative to ground/horizontal)
     public void turnToAngle(double angle){
@@ -34,7 +34,7 @@ public class Hood {
 
     // Hood will not move if set past its limit, so this function returns the closest position that is still in range
     public double clip(double pos){
-        return Range.clip(pos,0,1);
+        return Range.clip(pos,Robot.Constants.hoodClip0,Robot.Constants.hoodClip1);
     }
     public double scale (double pos){
         return Range.scale(pos, 0, 1, Robot.Constants.hoodScale0, Robot.Constants.hoodScale1);

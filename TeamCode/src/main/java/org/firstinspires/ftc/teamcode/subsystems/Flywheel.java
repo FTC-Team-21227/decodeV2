@@ -15,8 +15,8 @@ import org.firstinspires.ftc.teamcode.lib.PIDController;
 //two-motor flywheel
 public class Flywheel {
     //pid methods
-    public CachedMotor FLYWHEEL_MASTER;
-    public CachedMotor FLYWHEEL2;
+    public DcMotorEx FLYWHEEL_MASTER;
+    public DcMotorEx FLYWHEEL2;
     double targetVel;
     PIDController pid;
     FeedforwardController f;
@@ -24,12 +24,12 @@ public class Flywheel {
     public static double volts;
     //power
     public Flywheel(HardwareMap hardwareMap){
-        FLYWHEEL_MASTER = new CachedMotor(hardwareMap.get(DcMotorEx.class,"flywheel"));
+        FLYWHEEL_MASTER = /*new CachedMotor(*/hardwareMap.get(DcMotorEx.class,"flywheel")/*)*/;
         FLYWHEEL_MASTER.setDirection(DcMotorSimple.Direction.FORWARD);
         FLYWHEEL_MASTER.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         FLYWHEEL_MASTER.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         FLYWHEEL_MASTER.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        FLYWHEEL2 = new CachedMotor(hardwareMap.get(DcMotorEx.class,"flywheel2"));
+        FLYWHEEL2 = /*new CachedMotor(*/hardwareMap.get(DcMotorEx.class,"flywheel2")/*)*/;
         FLYWHEEL2.setDirection(DcMotorSimple.Direction.REVERSE);
         FLYWHEEL2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         FLYWHEEL2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -70,6 +70,6 @@ public class Flywheel {
 
     // Return flywheel current velocity
     public double getVel(){
-        return FLYWHEEL_MASTER.getMotor().getVelocity();
+        return FLYWHEEL_MASTER./*getMotor().*/getVelocity();
     }
 }

@@ -16,20 +16,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .forwardZeroPowerAcceleration(-40.356022741184866)
-            .lateralZeroPowerAcceleration(-50.625262888087825)
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.25, 0, 0.01, 0))
+            .forwardZeroPowerAcceleration(-35.356022741184866)
+            .lateralZeroPowerAcceleration(-69) //-68.22
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.3, 0, 0.01, 0))
             .headingPIDFCoefficients(new PIDFCoefficients(1.5, 0, 0.01, 0))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.04,0.0,0.00001,0.6,0.0))
             .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.01,0.0,0.000005,0.6,0.0))
             .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.02, 0, 0.001, 0))
             .centripetalScaling(0.0005)
-            .mass(8); // kg mass of robot
+            .mass(12.066); // kg mass of robot
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
-            .xVelocity(60.89125601700912)
-            .yVelocity(52.443046029158474)
+            .xVelocity(68)
+            .yVelocity(55.8)
 //            .useVoltageCompensation(true)
             .rightFrontMotorName("W_FR") // motor names, keep consistent on configs
             .rightRearMotorName("W_BR")
@@ -41,8 +41,8 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(6) // use inches
-            .strafePodX(4.75)
+            .forwardPodY(0.945) // use inches
+            .strafePodX(1.488)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)

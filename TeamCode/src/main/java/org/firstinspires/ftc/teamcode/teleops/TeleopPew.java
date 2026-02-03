@@ -2,21 +2,19 @@ package org.firstinspires.ftc.teamcode.teleops;
 
 import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.subsystems.Turret;
+import org.firstinspires.ftc.teamcode.subsystems.Turret2;
 
 @TeleOp
 public class TeleopPew extends OpMode {
-    Turret turret;
+    Turret2 turret;
 
 //    Telemetry telemetry = dashboard.getTelemetry();
     JoinedTelemetry joinedTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(),telemetry);
     public void init(){
-        turret = new Turret (hardwareMap);
+        turret = new Turret2(hardwareMap);
 //        robot.turret.turnToRobotAngle(0);
 //        robot.hood.turnToAngle(Math.toRadians(45));
         joinedTelemetry.update();

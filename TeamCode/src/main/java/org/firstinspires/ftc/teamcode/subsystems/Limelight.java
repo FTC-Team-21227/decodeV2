@@ -9,6 +9,8 @@ import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 
@@ -44,9 +46,9 @@ public class Limelight {
             Pose3D botpose = result.getBotpose_MT2();
             // pose3d, field relative, coords + orientation
 
-            double x = botpose.getPosition().x; // x
-            double y = botpose.getPosition().y; // y
-            double heading = botpose.getOrientation().getYaw(); // robot heading in radians
+            double x = botpose.getPosition().toUnit(DistanceUnit.INCH).x; // x
+            double y = botpose.getPosition().toUnit(DistanceUnit.INCH).y; // y
+            double heading = botpose.getOrientation().getYaw(AngleUnit.RADIANS); // robot heading in radians
 
             return new Pose(x, y, heading);
         } else {
