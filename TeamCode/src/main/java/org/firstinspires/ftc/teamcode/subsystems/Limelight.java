@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 
@@ -110,5 +112,20 @@ public class Limelight {
         } else {
             telemetry.addData("Limelight", "No Targets");
         }
+    }
+    public double getDistanceToGoal() {
+        LLResult result = limelight.getLatestResult();
+        if (result == null || !result.isValid()) return -1;
+
+        final double cameraHeightInches = 8.0;      // inches
+        final double goalHeightInches = 56.0;
+        double limelightMountAngleDegrees = 0;
+
+        double ty = result.getTy(); // vertical offset in degrees
+        double angleToGoalDegrees = limelightMountAngleDegrees + ty;
+        double angleToGoalRadians = Math.toRadians(angleToGoalDegrees);
+
+        double distanceFromLimelightToGoalInches = (goalHeightInches - cameraHeightInches)/Math.tan(angleToGoalRadians);
+        return distanceFromLimelightToGoalInches;
     }
 }
