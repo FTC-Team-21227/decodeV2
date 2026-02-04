@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.annotation.SuppressLint;
 
+import com.acmerobotics.roadrunner.Pose2d;
 import com.pedropathing.Drivetrain;
 import com.pedropathing.ErrorCalculator;
 import com.pedropathing.VectorCalculator;
@@ -631,11 +632,13 @@ public class Robot {
             // ------------------------Exit conditions-----------------
             // Don't relocalize if robot moving too fast (motion blur)
             if (vel.getMagnitude() > 1.0 || Math.toDegrees(angVel) > 1.0) {
+                RobotLog.a("Too fast to relocalize!");
                 return false; // EXIT METHOD
             }
 
+            RobotLog.a("heading used for camera" + Math.toDegrees(txWorldPinpoint.getHeading()));
             // Get camera's pose (field-relative) using AprilTag
-            Pose poseWorldTurret = camera.update(Math.toDegrees(txWorldPinpoint.getHeading()), telemetry);
+            Pose poseWorldTurret = camera.update(/*Math.toDegrees(txWorldPinpoint.getHeading()), */telemetry);
             // If no pose was found, default to the pinpoint localizer
             if (poseWorldTurret == null){
                 return false; // EXIT METHOD
@@ -658,6 +661,12 @@ public class Robot {
                     poseWorldRobot.getY()));
             RobotLog.a(String.format("Pose Heading %6.1f  (rad)",
                     poseWorldRobot.getHeading()
+            ));
+            RobotLog.a(String.format("Pedro Pose XY %6.1f %6.1f  (inch)",
+                    FTCToPedro(poseWorldRobot).getX(),
+                    FTCToPedro(poseWorldRobot).getY()));
+            RobotLog.a(String.format("Pedro Pose Heading %6.1f  (rad)",
+                    FTCToPedro(poseWorldRobot).getHeading()
             ));
 
             return true; // Returns true for successful relocalization
@@ -934,9 +943,9 @@ public class Robot {
     public static class Constants{
         public final static boolean MINIMIZE_TELEMETRY = false;
         public final static boolean friedFeed = true;
-        public static double flywheelPower = 2.25;
-        public static double flywheelPower_Tele = 2.25;
-        public static double flywheelPower_Far = 2.048;
+        public static double flywheelPower = 2.072;
+        public static double flywheelPower_Tele = 2.072;
+        public static double flywheelPower_Far = 1.631;
         public static double hoodAngleOffset = 0;
         public final static double p = 0.65; //proportion along the trajectory
         public final static double p_far = 0.55;
@@ -952,16 +961,17 @@ public class Robot {
         public final static Pose teleShotPose_Far = new Pose(0,0,goalPos.getTheta()+Math.PI);
         // FLYWHEEL
         public final static double spinUpTimeout = 2;
-        public final static double kP = 0.057, /*0.052,*/ kI = 0, kD = 0.000, kF = 10 /*kF will be removed in our new version*/, kS = 3.85, kV = 0.00556; //0.00450;
+        public final static double kP = 0.052, /*0.052,*/ kI = 0, kD = 0.000, kF = 10 /*kF will be removed in our new version*/, kS = 1.94, kV = 0.00552; //0.00450;
         public final static double humanFeedVel = -800 / 28.0 * Math.PI * 2; //in radps
         //STOPPER
-        public final static double stopperScale0 = 0.11;
+        public final static double stopperScale0 = 0.12;
         public final static double stopperScale1 = 0.34;
         //ARM
         public final static double armScale0 = 0.04;
         public final static double armScale1 = 0.27;
         // FEEDER
-        public final static double feederPower = 1.0;
+        public final static double transferPower = 1.0;
+        public final static double transferPower_Far = 0.5;
         public final static double slowIntakePower = 0.7;
         public final static double intakePower = 1.0;
         public final static double outtakePower = 0.6;
@@ -986,18 +996,18 @@ public class Robot {
          */
         public final static double turretGearRatio = 23.0/105;
         public static double turretAngleOffset = -11; //-69 //this is real
-        public final static Pose turretPos = new Pose(4.502,0,0);
+        public final static Pose2d turretPos = new Pose2d(-4.502,0,0);
         public final static Pose cameraPos = new Pose(7.5, 2, Math.toRadians(0));
-        public final static double turretHighAngle = 0; //164.7*Math.PI/180; //220*Math.PI/180;; //355*Math.PI/180; // //140*Math.PI/180; // In rad, pos = 1
-        public final static double turretLowAngle = -Math.PI/2; //-175*Math.PI/180; //-40*Math.PI/180;; // //-208*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretHighAngle = Math.PI/2; //164.7*Math.PI/180; //220*Math.PI/180;; //355*Math.PI/180; // //140*Math.PI/180; // In rad, pos = 1
+        public final static double turretLowAngle = 0; //-175*Math.PI/180; //-40*Math.PI/180;; // //-208*Math.PI/180; // In rad (= old -330 deg)
 //        public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
         // Offset from (-pi,pi) to (midpoint-pi, midpoint+pi), i.e. shift midpoint from 0 to new midpoint
         public final static double turretTargetRangeOffset = 0; //Math.PI/2; //(turretLowAngle + turretHighAngle )/2.0; //turretHighAngle-Math.PI;
-        public final static double turretScale0 = 0.26; //0.33055555555555555; //0.218; //0; //0.25 ;//0; //0.11;
-        public final static double turretScale1 = 0.525; //0.67; //1; //0.78; //0.86; //1;
-        public final static double turretClip0 = 0.35; //0;
+        public final static double turretScale0 = 0.40;  //0.33055555555555555; //0.218; //0; //0.25 ;//0; //0.11;
+        public final static double turretScale1 = 0.66; //0.67; //1; //0.78; //0.86; //1;
+        public final static double turretClip0 = 0.24; //PHYSICAL LIMIT: 0.20 //0;
 //        public final static double turretClip0_tele = turretClip0; //turretScale0;
-        public final static double turretClip1 = 0.72; //0.8;
+        public final static double turretClip1 = 0.62; //PHYSICAL LIMIT: 0.72 //0.8;
 //        public final static double turretClip1_tele = turretClip1; //turretScale1;
         public final static double feederScale0 = 0;
         public final static double feederScale1 = 1;
@@ -1019,6 +1029,7 @@ public class Robot {
         public static double p = Constants.p;
         public static double deltaH = Constants.deltaH;
         public static double drivePower = Constants.drivePower;
+        public static double transferPower = Constants.transferPower;
         public static double turretClip0 = Constants.turretClip0;
         public static double turretClip1 = Constants.turretClip1;
         public static double flywheelPower = Constants.flywheelPower;
@@ -1093,7 +1104,7 @@ public class Robot {
         double flightTime = Math.sqrt(2 * deltaH / (p * g * (1 - p))); // Ball trajectory time from ground to ground
 
         // Calculate shot vector using TURRET's position on the robot and ROBOT's heading---
-        Pose pose = txWorldPinpoint.plus(Robot.Constants.turretPos); // Turret's field-relative position
+        Pose pose = null ;//txWorldPinpoint.plus(Robot.Constants.turretPos); // Turret's field-relative position
         Vector goalVector = Robot.Positions.goalPos.minus(pose.getAsVector());
         double distance = goalVector.getMagnitude(); // Horizontal distance
         double goalVectorAngle = goalVector.getTheta(); // Angle
@@ -1159,7 +1170,7 @@ public class Robot {
 
 
         // Calculate shot vector using TURRET's position on the robot and ROBOT's heading---
-        Pose pose = poseRobot.plus(Constants.turretPos); // Turret's field-relative position
+        Pose pose = null ;//poseRobot.plus(Constants.turretPos); // Turret's field-relative position
         Vector goalVector = Positions.goalPos.minus(pose.getAsVector());
         double distance = goalVector.getMagnitude(); // Horizontal distance
         double goalVectorAngle = goalVector.getTheta(); // Angle
@@ -1558,6 +1569,7 @@ public class Robot {
                 }
                 break;
         }  // --------------------END OF STATE MANAGER--------------------------------
+        telemetry.addData("transfer power", Positions.transferPower);
 //        telemetry.update();
     } // -------------------------------END OF UPDATE SHOOTER---------------------------------------
 
@@ -1599,6 +1611,7 @@ public class Robot {
                 driveState = DriveState.RELATIVE;
                 break;
         }
+        camera.updateHeading(Math.toDegrees(txWorldPinpoint.getHeading()));
         double curTime = aprilTimer.milliseconds();
         telemetry.addData("loop time (ms)",curTime-lastTime);
         telemetry.addData("time since last relocalization (s)", curTime/1000.0); //IMPORTANT
@@ -1606,6 +1619,9 @@ public class Robot {
         telemetry.addData("follower x", follower.getPose().getX()); //ALL IMPORTANT
         telemetry.addData("follower y", follower.getPose().getY());
         telemetry.addData("follower heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.addData("world x", txWorldPinpoint.getX()); //ALL IMPORTANT
+        telemetry.addData("world y", txWorldPinpoint.getY());
+        telemetry.addData("world heading (deg)", Math.toDegrees(txWorldPinpoint.getHeading()));
     } //----------------------------END OF LOCALIZATION CLASS---------------------------------------
 
     // ---------------------------------------AIMING------------------------------------------------
@@ -1618,6 +1634,7 @@ public class Robot {
             Positions.flywheelPower = Constants.flywheelPower_Tele;
             Positions.deltaH = Constants.deltaH;
             Positions.teleShotPose = handlePose(Constants.teleShotPose);
+            Positions.transferPower=  Constants.transferPower;
             opModeState = OpModeState.TELEOP;
         }
         else { //chagne to be better at far
@@ -1626,6 +1643,7 @@ public class Robot {
             Positions.flywheelPower = Constants.flywheelPower_Far;
             Positions.deltaH = Constants.deltaH_far;
             Positions.teleShotPose = handlePose(Constants.teleShotPose_Far);
+            Positions.transferPower = Constants.transferPower_Far;
             opModeState = OpModeState.TELEOP_FAR;
         }
         return close;

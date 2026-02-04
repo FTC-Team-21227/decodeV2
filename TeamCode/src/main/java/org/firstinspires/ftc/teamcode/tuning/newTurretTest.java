@@ -30,19 +30,19 @@ public class newTurretTest extends LinearOpMode {
                 turret.turret.setPosition(0.75);
             }
             if (gamepad1.b){
-                turret.turnToRobotAngle(45);
+                turret.turnToRobotAngle(Math.toRadians(45));
             }
             if (gamepad1.a){
-                turret.turnToRobotAngle(-45);
+                turret.turnToRobotAngle(Math.toRadians(-45));
             }
             if (gamepad1.x){
-                turret.turnToRobotAngle(-20);
+                turret.turnToRobotAngle(0);
             }
             if (gamepad1.dpadLeftWasPressed()){
                 turretPos += 0.01;
                 turret.turret.setPosition(turretPos);
             }
-            if (gamepad1.dpad_right){
+            if (gamepad1.dpadRightWasPressed()){
                 turretPos -= 0.01;
                 turret.turret.setPosition(turretPos);
             }

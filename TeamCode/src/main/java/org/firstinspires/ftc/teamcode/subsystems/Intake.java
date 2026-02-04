@@ -41,9 +41,9 @@ public class Intake {
         power2 = 0;
     }
     public void shoot(){
-        if (!paused) {INTAKE.setPower(1* Robot.Constants.intakePower); TRANSFER.setPower(1* Robot.Constants.intakePower);}
+        if (!paused) {INTAKE.setPower(1* Robot.Constants.intakePower); TRANSFER.setPower(1* Robot.Positions.transferPower);}
         power1 = 1*Robot.Constants.intakePower;
-        power2 = 1*Robot.Constants.intakePower;
+        power2 = 1*Robot.Positions.transferPower;
     }
     public void outtake(){
         if (!paused) {INTAKE.setPower(-1*Robot.Constants.outtakePower); TRANSFER.setPower(-1* Robot.Constants.outtakePower);}

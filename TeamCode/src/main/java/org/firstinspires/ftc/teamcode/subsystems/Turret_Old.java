@@ -30,7 +30,7 @@ public class Turret_Old {
 
     // Gives turret's robot-relative pose based on its position and current heading
     public Pose getPoseRobotTurret() {
-        return new Pose(Robot.Constants.turretPos.getX(),Robot.Constants.turretPos.getY(),getTurretRobotAngle());
+        return new Pose(Robot.Constants.turretPos.position.x,Robot.Constants.turretPos.position.y,getTurretRobotAngle());
     }
 
     // Function returns the closest position that is still in range (turret will not move if not in range)

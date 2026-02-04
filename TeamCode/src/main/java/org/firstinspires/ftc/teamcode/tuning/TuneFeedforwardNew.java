@@ -34,6 +34,9 @@ public class TuneFeedforwardNew extends OpMode {
         t = new ElapsedTime();
         telemetry.update();
     }
+    public void start(){
+        t.reset();
+    }
     public void loop(){
         double time = t.seconds();
         double power = power(time);

@@ -18,7 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 public class LimelightApriltagTest extends OpMode{
 
     private Limelight3A limelight;
-    private IMU imu;
+//    private IMU imu;
     private GoBildaPinpointDriver pinpoint;
 
     @Override
@@ -26,10 +26,10 @@ public class LimelightApriltagTest extends OpMode{
     {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0); // limelight 0 pipeline
-        imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD); // MIGHT CHANGE
-        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
+//        imu = hardwareMap.get(IMU.class, "imu");
+//        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP,
+//                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD); // MIGHT CHANGE
+//        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 //        pinpoint.setHeading(90, AngleUnit.DEGREES);
         pinpoint.resetPosAndIMU();
@@ -44,10 +44,10 @@ public class LimelightApriltagTest extends OpMode{
     @Override
     public void loop()
     {
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
 
         pinpoint.update();
-        double heading = 90- pinpoint.getHeading(AngleUnit.DEGREES);
+        double heading = pinpoint.getHeading(AngleUnit.DEGREES) + 180;
         limelight.updateRobotOrientation(heading);
         LLResult llResult = limelight.getLatestResult();
 

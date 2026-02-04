@@ -7,6 +7,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -27,9 +28,11 @@ public class Limelight {
         limelight.start(); // starts limelight
     }
 
+    public void updateHeading(double headingDegrees){
+        limelight.updateRobotOrientation(headingDegrees);
+    }
     // Returns camera's field-relative position
-    public Pose update(double headingDegrees /*degrees*/, Telemetry telemetry) {
-        limelight.updateRobotOrientation(headingDegrees + 180);
+    public Pose update(Telemetry telemetry) {
         LLResult result = limelight.getLatestResult();
 //<<<<<<< HEAD
 //        Pose2D pose2d = pinpoint.getPosition();
@@ -47,11 +50,11 @@ public class Limelight {
 
             Pose3D botpose = result.getBotpose_MT2();
             // pose3d, field relative, coords + orientation
-
+//            RobotLog.dd("BotPose MT2", " " + botpose.getPosition().toUnit(DistanceUnit.INCH).toString() + "\n" + botpose.getOrientation().toString());
             double x = botpose.getPosition().toUnit(DistanceUnit.INCH).x; // x
             double y = botpose.getPosition().toUnit(DistanceUnit.INCH).y; // y
             double heading = botpose.getOrientation().getYaw(AngleUnit.RADIANS); // robot heading in radians
-
+//            RobotLog.a("x y h" + x + " " + y + " " + heading);
             return new Pose(x, y, heading);
         } else {
             telemetry.addData("Limelight", "No Targets");

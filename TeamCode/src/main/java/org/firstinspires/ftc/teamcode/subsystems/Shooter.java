@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.acmerobotics.roadrunner.Pose2d;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Robot;
 
 
@@ -35,11 +37,11 @@ public class Shooter {
         flywheel = new Flywheel(hardwareMap);
         table = ShooterSystem.createDefaultTable();
     }
-    // METHODS
-    public Vector getGoalVector(Pose robotPose) {
-        Pose turretPose = robotPose.plus(Robot.Constants.turretPos);
-        return Robot.Positions.goalPos.minus(turretPose.getAsVector());
-    }
+//    // METHODS
+//    public Vector getGoalVector(Pose robotPose) {
+//        Pose turretPose = robotPose.plus(Robot.Constants.turretPos);
+//        return Robot.Positions.goalPos.minus(turretPose.getAsVector());
+//    }
     
 
     // Adjust the robot Pose based on its current movement
@@ -71,13 +73,15 @@ public class Shooter {
         if(turretRight) {Robot.Positions.turretAngleManualOffset -= Math.toRadians(1);}
 
         // ------------------------Shooting trajectory values-----------------------
-        double p = 0.65; //Robot.Positions.p; // Fraction of time along trajectory from ground to ground
+        double p = Robot.Positions.p; //Robot.Positions.p; // Fraction of time along trajectory from ground to ground
         double g = G; // Gravity (in/s^2)
         double deltaH = Robot.Positions.deltaH; // Height difference from shooter to goal
         double flightTime = Math.sqrt(2 * deltaH / (p * g * (1 - p))); // Ball trajectory time from ground to ground
 
+        Pose2d pose2d = new Pose2d(robotPose.getX(), robotPose.getY(), robotPose.getHeading());
         // Calculate shot vector using TURRET's position on the robot and ROBOT's heading---
-        pose = robotPose.plus(Robot.Constants.turretPos); // Turret's field-relative position
+        Pose2d poseTurret = pose2d.times(Robot.Constants.turretPos);
+        pose = new Pose(poseTurret.position.x, poseTurret.position.y, poseTurret.heading.toDouble()); // Turret's field-relative position
         goalVector = Robot.Positions.goalPos.minus(pose.getAsVector());
         distance = goalVector.getMagnitude(); // Horizontal distance
         goalVectorAngle = goalVector.getTheta(); // Angle
@@ -122,6 +126,8 @@ public class Shooter {
         if (hood.HOOD.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
 //        if (turret.turret.commandedOutsideRange()) telemetry.addLine("WARNING: turret commanded out of its range! Auto set to 0 or 1.");
         telemetry.addData("flywheel power scale factor", Robot.Positions.flywheelPower + Robot.Positions.flywheelPowerOffset);
+        telemetry.addData("p", Robot.Positions.p);
+        telemetry.addData("h", Robot.Positions.deltaH);
         if (!Robot.Constants.MINIMIZE_TELEMETRY) {
 //            telemetry.addData("human feed", humanFeed); //NOT IMPORTANT
 //            telemetry.addData("setPose", toggleLock); //NOT IMPORTANT
@@ -171,4 +177,8 @@ public class Shooter {
     public Flywheel getFlywheel() {
         return flywheel;
     }
+    public Pose times(Pose pose1, Pose pose2) {
+        return pose1;
+    }
+
 }
