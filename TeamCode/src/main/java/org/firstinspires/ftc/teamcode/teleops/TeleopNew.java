@@ -28,7 +28,7 @@ public class TeleopNew extends OpMode {
     MultipleTelemetry joinedTelemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(),telemetry);
     public void init(){
 //        turret = new Turret (hardwareMap);
-        robot = Robot.getInstance(new Pose(72,72, Math.PI/2), Robot.Color.BLUE); //start facing the goals, RED poses
+        robot = Robot.getInstance(new Pose(72,72, Math.PI/2), Robot.Color.RED); //start facing the goals, RED poses
         robot.initTeleop(hardwareMap, telemetry);
 //        robot.turret.turnToRobotAngle(0);
 //        robot.hood.turnToAngle(Math.toRadians(45));

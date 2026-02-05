@@ -9,6 +9,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -35,7 +36,8 @@ public class AutoMove_Red extends OpMode {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePose));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
-
+        scorePreload.setBrakingStrength(0.1);
+        scorePreload.setBrakingStart(5);
     /* Here is an example for Constant Interpolation
     scorePreload.setConstantInterpolation(startPose.getHeading()); */
 
@@ -98,7 +100,13 @@ public class AutoMove_Red extends OpMode {
         switch (pathState) {
             case 0:
                 follower.followPath(scorePreload);
-                setPathState(1);
+                setPathState(-2);
+                break;
+            case -2:
+                if (pathTimer.getElapsedTimeSeconds()>1){
+                    setPathState(1);
+                    RobotLog.a("switch");
+                }
                 break;
             case 1:
 

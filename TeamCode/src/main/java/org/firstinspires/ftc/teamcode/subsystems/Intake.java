@@ -31,7 +31,7 @@ public class Intake {
     }
     // Modes
     public void intake(){
-        if (!paused) {INTAKE.setPower(1* Robot.Constants.intakePower); TRANSFER.setPower(0.3 /*1* Robot.Constants.intakePower*/);}
+        if (!paused) {INTAKE.setPower(1* Robot.Constants.intakePower); TRANSFER.setPower(0.65 /*1* Robot.Constants.intakePower*/);}
         power1 = 1*Robot.Constants.intakePower;
         power2 = 0.65;
     }
@@ -41,8 +41,8 @@ public class Intake {
         power2 = 0;
     }
     public void shoot(){
-        if (!paused) {INTAKE.setPower(1* Robot.Constants.intakePower); TRANSFER.setPower(1* Robot.Positions.transferPower);}
-        power1 = 1*Robot.Constants.intakePower;
+        if (!paused) {INTAKE.setPower(1* Robot.Positions.shootPower); TRANSFER.setPower(1* Robot.Positions.transferPower);}
+        power1 = 1*Robot.Positions.shootPower;
         power2 = 1*Robot.Positions.transferPower;
     }
     public void outtake(){

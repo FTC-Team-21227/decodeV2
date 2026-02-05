@@ -690,6 +690,9 @@ public class Robot {
             Positions.p = Constants.p_far;
             Positions.goalPos = handleVector(Constants.goalPos_far);
             Positions.deltaH = Constants.deltaH_far;
+            Positions.shootPower = Constants.shootPower_Far;
+            Positions.transferPower = Constants.transferPower_Far;
+            Positions.flywheelPower = Constants.flywheelPower_Far;
         }
         intake = new Intake(hardwareMap);
 //        camera = new AprilTagLocalization2(hardwareMap);
@@ -718,7 +721,6 @@ public class Robot {
         Positions.drivePower = Constants.drivePower;
         Positions.turretClip0 = Constants.turretClip0;
         Positions.turretClip1 = Constants.turretClip1;
-        Positions.flywheelPower = Constants.flywheelPower;
         Positions.flywheelPowerOffset = 0;
         Positions.turretAngleManualOffset = 0;
         Positions.hoodAngleManualOffset = 0;
@@ -945,7 +947,7 @@ public class Robot {
         public final static boolean friedFeed = true;
         public static double flywheelPower = 2.072;
         public static double flywheelPower_Tele = 2.072;
-        public static double flywheelPower_Far = 1.631;
+        public static double flywheelPower_Far = 1.701; //1.631;
         public static double hoodAngleOffset = 0;
         public final static double p = 0.65; //proportion along the trajectory
         public final static double p_far = 0.55;
@@ -971,9 +973,11 @@ public class Robot {
         public final static double armScale1 = 0.27;
         // FEEDER
         public final static double transferPower = 1.0;
-        public final static double transferPower_Far = 0.5;
+        public final static double transferPower_Far = 0.67;
         public final static double slowIntakePower = 0.7;
         public final static double intakePower = 1.0;
+        public final static double shootPower = 1.0;
+        public final static double shootPower_Far = 0.8; //intake power ONLY for shooting
         public final static double outtakePower = 0.6;
         public final static double intakePulseTime = 0.55;
         public final static double outtakePulseTime = 0.15;
@@ -1030,6 +1034,7 @@ public class Robot {
         public static double deltaH = Constants.deltaH;
         public static double drivePower = Constants.drivePower;
         public static double transferPower = Constants.transferPower;
+        public static double shootPower = Constants.shootPower;
         public static double turretClip0 = Constants.turretClip0;
         public static double turretClip1 = Constants.turretClip1;
         public static double flywheelPower = Constants.flywheelPower;
@@ -1634,6 +1639,7 @@ public class Robot {
             Positions.flywheelPower = Constants.flywheelPower_Tele;
             Positions.deltaH = Constants.deltaH;
             Positions.teleShotPose = handlePose(Constants.teleShotPose);
+            Positions.shootPower = Constants.shootPower;
             Positions.transferPower=  Constants.transferPower;
             opModeState = OpModeState.TELEOP;
         }
@@ -1643,6 +1649,7 @@ public class Robot {
             Positions.flywheelPower = Constants.flywheelPower_Far;
             Positions.deltaH = Constants.deltaH_far;
             Positions.teleShotPose = handlePose(Constants.teleShotPose_Far);
+            Positions.shootPower = Constants.shootPower_Far;
             Positions.transferPower = Constants.transferPower_Far;
             opModeState = OpModeState.TELEOP_FAR;
         }
