@@ -54,7 +54,8 @@ public class Limelight {
             double x = botpose.getPosition().toUnit(DistanceUnit.INCH).x; // x
             double y = botpose.getPosition().toUnit(DistanceUnit.INCH).y; // y
             double heading = botpose.getOrientation().getYaw(AngleUnit.RADIANS); // robot heading in radians
-//            RobotLog.a("x y h" + x + " " + y + " " + heading);
+            RobotLog.a("botpose heading");
+            RobotLog.a("x y h" + x + " " + y + " " + heading);
             return new Pose(x, y, heading);
         } else {
             telemetry.addData("Limelight", "No Targets");

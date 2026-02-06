@@ -53,7 +53,7 @@ public class AutoRedClose_Teammate extends OpMode {
     private final Pose scorePose = new Pose(60+2*(72-60), 89, Math.toRadians(45)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose pickup1Pose = new Pose(26+2*(72-26), 85, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Pose = new Pose(25+2*(72-25), 58, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickupGatePose = new Pose(14+2*(72-14), 62.25, Math.toRadians(25)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickupGatePose = new Pose(14+2*(72-14), 61, Math.toRadians(25)); //small: 62.25 // Lowest (Third Set) of Artifacts from the Spike Mark.
 //    private final Pose intakeGatePose = new Pose(15+2*(72-15), 56, Math.toRadians(60));
     private final Pose parkPose = new Pose(60+2*(72-60), 99, Math.toRadians(45));
 
@@ -146,9 +146,10 @@ public class AutoRedClose_Teammate extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case START:
-                follower.getConstraints().setBrakingStart(4);
+                follower.getConstraints().setBrakingStart(2);
+                follower.getConstraints().setBrakingStrength(0.7);
                 follower.followPath(scorePreload);
-                intake = false;
+                intake = true;
                 shoot = false;
                 lock = true;
                 setPathState(PathState.SCOREPRELOAD);
@@ -167,20 +168,22 @@ public class AutoRedClose_Teammate extends OpMode {
                 }
                 if (!follower.isBusy()) {
                     /* Score Preload */
+                    intake = false;
                     setPathState(PathState.SCORINGPRELOAD); //every time set path state is called, pathtimer is reset
                     RobotLog.a("score preload -> scoring preload");
                 }
                 break;
             case SCORINGPRELOAD:
-                if (pathTimer.getElapsedTimeSeconds() > 0.3){
+                if (pathTimer.getElapsedTimeSeconds() > 0.4){
                     shoot = true;
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 0.67){
+                if (pathTimer.getElapsedTimeSeconds() > 0.77){
                     shoot = false;
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
                     lock = true;
                     /* Move to Intake Balls */
                     follower.getConstraints().setBrakingStart(1);
+                    follower.getConstraints().setBrakingStrength(1);
                     follower.followPath(grabPickup2, false);
                     setPathState(PathState.PICKUP2);
                     RobotLog.a("scoring preload -> pickup 1");
@@ -367,10 +370,10 @@ public class AutoRedClose_Teammate extends OpMode {
                 }
                 break;
             case SCORING1:
-                if (pathTimer.getElapsedTimeSeconds() > 0.67){
+                if (pathTimer.getElapsedTimeSeconds() > 0.3){
                     shoot = true;
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 1){
+                if (pathTimer.getElapsedTimeSeconds() > 0.67){
                     shoot = false;
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
                     lock = true;
@@ -383,6 +386,7 @@ public class AutoRedClose_Teammate extends OpMode {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     setPathState(PathState.DONE);
 //                }
+                break;
         }
     }
 
@@ -429,13 +433,14 @@ public class AutoRedClose_Teammate extends OpMode {
      **/
     @Override
     public void init() {
-        RobotLog.a("bro!!!");
+        RobotLog.a("jfjfro!!!");
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         actionTimer = new Timer();
 
         robot = Robot.startInstance(startPose, Robot.Color.RED);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
+        robot.stopper.close();
         follower = robot.follower;
         follower.getConstraints().setBrakingStrength(1);
 //        follower = Constants.createFollower(hardwareMap);

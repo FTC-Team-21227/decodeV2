@@ -42,24 +42,24 @@ public class AutoRedFar extends OpMode {
     }
     private PathState pathState;
     private int intakeState;
-    private boolean intake;
-    private boolean shoot;
-    private boolean lock;
+    private boolean intake = false;
+    private boolean shoot = false;
     private final Pose startPose = new Pose(88.4213, 6.6302, Math.toRadians(0)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(88.4213, 12.6302, Math.toRadians(0)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose scorePose = new Pose(88.4213, 17.6302, Math.toRadians(0)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose shootPose = PedroToFTC(scorePose);
-    private final Pose pickup1Pose = new Pose(132.5624, 8.3616, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(15+2*(72-15), 40, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickup1Pose = new Pose(132.5624, 6.6316, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(20+2*(72-20), 40, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup4Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup5Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
-
+    private final Pose pickup45Pose = new Pose(132.5624, 16.6316, Math.toRadians(0));
+    private final Pose pickup45Pose_rest = new Pose(125.5624, 9.6316, Math.toRadians(0));
 
     //    private final Pose intakeGatePose = new Pose(15+2*(72-15), 56, Math.toRadians(60));
-    private final Pose parkPose = new Pose(94.4213, 12.6302, Math.toRadians(0));
+    private final Pose parkPose = new Pose(94.4213, 17.6302, Math.toRadians(0));
 
     private Path scorePreload;
-    private PathChain grabPickup1,  grabPickup2,  grabPickup3, grabPickup4, grabPickup5;
+    private PathChain grabPickup1,  grabPickup2,  grabPickup3, grabPickup4, grabPickup5, grabPickup5_2, grabPickup5_3;
     private Path scorePickup1, scorePickup2, scorePickup3, scorePickup4,  scorePickup5, park;
 
     boolean reset = true;
@@ -124,6 +124,14 @@ public class AutoRedFar extends OpMode {
                 .addPath(new BezierLine(scorePose, pickup5Pose))
                 .setConstantHeadingInterpolation(pickup5Pose.getHeading())
                 .build();
+//        grabPickup5_2 = follower.pathBuilder()
+//                .addPath(new BezierLine(pickup45Pose, pickup45Pose_rest))
+//                .setConstantHeadingInterpolation(pickup5Pose.getHeading())
+//                .build();
+//        grabPickup5_3 = follower.pathBuilder()
+//                .addPath(new BezierLine(pickup45Pose_rest, pickup5Pose))
+//                .setConstantHeadingInterpolation(pickup5Pose.getHeading())
+//                .build();
 
         /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup5 = new Path(new BezierLine(pickup5Pose, scorePose));
@@ -139,9 +147,8 @@ public class AutoRedFar extends OpMode {
                 follower.getConstraints().setBrakingStart(4);
                 follower.getConstraints().setBrakingStrength(0.5);
                 follower.followPath(scorePreload);
-                intake = false;
+                intake = true;
                 shoot = false;
-                lock = true;
                 setPathState(PathState.SCOREPRELOAD);
                 RobotLog.a("start -> score preload");
                 break;
@@ -153,18 +160,20 @@ public class AutoRedFar extends OpMode {
             */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if (pathTimer.getElapsedTimeSeconds() > 3){
-                    shoot = true;
+                if (pathTimer.getElapsedTimeSeconds() > 2.7){
+                    intake = false;
                     /* Score Preload */
                     setPathState(PathState.SCORINGPRELOAD); //every time set path state is called, pathtimer is reset
                     RobotLog.a("score preload -> scoring preload");
                 }
                 break;
             case SCORINGPRELOAD:
-                if (pathTimer.getElapsedTimeSeconds() > 0.6){
+                if (pathTimer.getElapsedTimeSeconds() > 0.4){
+                    shoot = true;
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 1.0){
                     shoot = false;
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
-                    lock = true;
                     /* Move to Intake Balls */
                     follower.followPath(grabPickup1, false);
                     setPathState(PathState.PICKUP1);
@@ -181,10 +190,7 @@ public class AutoRedFar extends OpMode {
                 }
                 break;
             case SCORE1:
-                if (follower.getDistanceRemaining() < 2){
-                    lock = false;
-                }
-                if (pathTimer.getElapsedTimeSeconds() > 1){
+                if (pathTimer.getElapsedTimeSeconds() > 1.5){
                     intake = false;
                 }
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
@@ -200,7 +206,6 @@ public class AutoRedFar extends OpMode {
                 if (pathTimer.getElapsedTimeSeconds() > 0.8){
                     shoot = false;
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
-                    lock = true;
                     /* Move to Intake Balls */
                     follower.getConstraints().setBrakingStrength(1);
                     follower.getConstraints().setBrakingStart(1);
@@ -220,10 +225,7 @@ public class AutoRedFar extends OpMode {
                 }
                 break;
             case SCORE2:
-                if (follower.getDistanceRemaining() < 2){
-                    lock = false;
-                }
-                if (pathTimer.getElapsedTimeSeconds() > 1){
+                if (pathTimer.getElapsedTimeSeconds() > 1.5){
                     intake = false;
                 }
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
@@ -239,7 +241,6 @@ public class AutoRedFar extends OpMode {
                 if (pathTimer.getElapsedTimeSeconds() > 0.8){
                     shoot = false;
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
-                    lock = true;
                     /* Move to Intake Balls */
                     follower.followPath(grabPickup3, true);
                     setPathState(PathState.PICKUP3);
@@ -255,10 +256,7 @@ public class AutoRedFar extends OpMode {
                 }
                 break;
             case SCORE3:
-                if (follower.getDistanceRemaining() < 2){
-                    lock = false;
-                }
-                if (pathTimer.getElapsedTimeSeconds() > 1){
+                if (pathTimer.getElapsedTimeSeconds() > 1.5){
                     intake = false;
                 }
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
@@ -274,10 +272,9 @@ public class AutoRedFar extends OpMode {
                 if (pathTimer.getElapsedTimeSeconds() > 0.8){
                     shoot = false;
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
-                    lock = true;
                     /* Move to Intake Balls */
-                    follower.followPath(grabPickup3, true);
-                    setPathState(PathState.PICKUP3);
+                    follower.followPath(grabPickup4, true);
+                    setPathState(PathState.PICKUP4);
                 }
                 break;
             case PICKUP4:
@@ -290,10 +287,7 @@ public class AutoRedFar extends OpMode {
                 }
                 break;
             case SCORE4:
-                if (follower.getDistanceRemaining() < 2){
-                    lock = false;
-                }
-                if (pathTimer.getElapsedTimeSeconds() > 1){
+                if (pathTimer.getElapsedTimeSeconds() > 1.5){
                     intake = false;
                 }
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
@@ -309,7 +303,6 @@ public class AutoRedFar extends OpMode {
                 if (pathTimer.getElapsedTimeSeconds() > 0.8){
                     shoot = false;
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
-                    lock = true;
                     /* Move to Intake Balls */
                     follower.followPath(grabPickup5, true);
                     setPathState(PathState.PICKUP5);
@@ -323,11 +316,22 @@ public class AutoRedFar extends OpMode {
                     setPathState(PathState.SCORE5);
                 }
                 break;
+//            case PICKUP5_2:
+//                if (!follower.isBusy()) {
+//                    /* Move to Score Balls */
+//                    follower.followPath(grabPickup5_3, true);
+//                    setPathState(PathState.PICKUP5_3);
+//                }
+//                break;
+//            case PICKUP5_3:
+//                if (!follower.isBusy()) {
+//                    /* Move to Score Balls */
+//                    follower.followPath(scorePickup5, true);
+//                    setPathState(PathState.SCORE5);
+//                }
+//                break;
             case SCORE5:
-                if (follower.getDistanceRemaining() < 2){
-                    lock = false;
-                }
-                if (pathTimer.getElapsedTimeSeconds() > 1){
+                if (pathTimer.getElapsedTimeSeconds() > 1.5){
                     intake = false;
                 }
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
@@ -350,6 +354,7 @@ public class AutoRedFar extends OpMode {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     setPathState(PathState.DONE);
                 }
+                break;
         }
     }
 
@@ -396,13 +401,14 @@ public class AutoRedFar extends OpMode {
      **/
     @Override
     public void init() {
-        RobotLog.a("bro!!!");
+        RobotLog.a("roe!!!");
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         actionTimer = new Timer();
 
         robot = Robot.startInstance(startPose, Robot.Color.RED);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO_FAR);
+        robot.stopper.close();
         follower = robot.follower;
         follower.getConstraints().setBrakingStrength(1);
 //        follower = Constants.createFollower(hardwareMap);

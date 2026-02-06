@@ -28,7 +28,7 @@ public class TeleopNew extends OpMode {
     MultipleTelemetry joinedTelemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(),telemetry);
     public void init(){
 //        turret = new Turret (hardwareMap);
-        robot = Robot.getInstance(new Pose(72,72, Math.PI/2), Robot.Color.RED); //start facing the goals, RED poses
+        robot = Robot.getInstance(new Pose(72,72, Math.PI/2), Robot.Color.BLUE); //start facing the goals, RED poses
         robot.initTeleop(hardwareMap, telemetry);
 //        robot.turret.turnToRobotAngle(0);
 //        robot.hood.turnToAngle(Math.toRadians(45));
@@ -53,11 +53,11 @@ public class TeleopNew extends OpMode {
         if (gamepad1.left_bumper && !intake) lb = true;
         else lb = false;
         intake = gamepad1.left_bumper;
-        if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) setPose = !setPose;
-        if (gamepad2.yWasPressed()) human = !human;
-        if (gamepad2.leftStickButtonWasPressed() /*|| gamepad1.leftStickButtonWasPressed()*/) slow = !slow;
+        if (gamepad1.xWasPressed()) setPose = !setPose;
+//        if (gamepad2.yWasPressed()) human = !human;
+        if (gamepad2.xWasPressed() /*|| gamepad1.leftStickButtonWasPressed()*/) slow = !slow;
 //        if (gamepad1.yWasPressed()) p2p = !p2p;
-        if (gamepad2.aWasPressed()) moveShot = !moveShot;
+//        if (gamepad2.aWasPressed()) moveShot = !moveShot;
 //        if (gamepad1.startWasPressed() || gamepad2.startWasPressed()) disableFlywheel = !disableFlywheel;
         RT = gamepad2.right_trigger > 0.1;
         LT = gamepad2.left_trigger > 0.1;
@@ -68,8 +68,8 @@ public class TeleopNew extends OpMode {
         //final version will be: LB = intake toggle, LT = reverse, RB = shoot request, RT = shoot 1
         robot.updateIntake(lb, gamepad1.left_trigger > 0.1, lb, gamepad1.right_bumper, joinedTelemetry);
         robot.setGoalTarget();
-        //final version will be: a = spinup request, b = idle request, x = toggle setPose => shooter lock/manual control, rightstick up/down = flywheel scale, dpad up/down= hood, dpad left/right = turret, gamepad2 y = human feed toggle, start = power flywheel off, gamepad2 bumpers and triggers , gamepad2 a = velocity correction
-        robot.updateShooter(joinedTelemetry,gamepad1.right_bumper, gamepad1.a, human, setPose, gamepad1.b, moveShot, null, gamepad1.right_stick_y + gamepad2.right_stick_y, gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed(), gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed(), gamepad1.dpadLeftWasPressed() || gamepad2.dpadLeftWasPressed(), gamepad1.dpadRightWasPressed() || gamepad2.dpadRightWasPressed());
+        //final version will be: a = spinup request, b = idle request, x = toggle setPose => shooter lock/manual control, rightstick up/down = flywheel scale, dpad up/down= hood, dpad left/right = turret, gamepad2 y = human feed toggle, start = power flywheel off
+        robot.updateShooter(joinedTelemetry,gamepad1.right_bumper, gamepad1.a || gamepad2.a, human, setPose, gamepad1.b || gamepad2.b, moveShot, null, -gamepad1.right_stick_y -gamepad2.right_stick_y, gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed(), gamepad1.dpadDownWasPressed() || gamepad2.dpadDownWasPressed(), gamepad1.dpadLeftWasPressed() || gamepad2.dpadLeftWasPressed(), gamepad1.dpadRightWasPressed() || gamepad2.dpadRightWasPressed());
 //        robot.shooter.turret.turnToRobotAngle(-44);
         //        robot.updateTurret(telemetry);
 //        robot.calculateShooter(telemetry, false);

@@ -146,7 +146,7 @@ public class AutoRedClose_GateGood extends OpMode {
             case START:
                 follower.getConstraints().setBrakingStart(4);
                 follower.followPath(scorePreload);
-                intake = false;
+                intake = true;
                 shoot = false;
                 lock = true;
                 setPathState(PathState.SCOREPRELOAD);
@@ -165,6 +165,7 @@ public class AutoRedClose_GateGood extends OpMode {
                 }
                 if (!follower.isBusy()) {
                     /* Score Preload */
+                    intake = false;
                     setPathState(PathState.SCORINGPRELOAD); //every time set path state is called, pathtimer is reset
                     RobotLog.a("score preload -> scoring preload");
                 }
@@ -373,6 +374,7 @@ public class AutoRedClose_GateGood extends OpMode {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     setPathState(PathState.DONE);
 //                }
+                break;
         }
     }
 
@@ -426,6 +428,7 @@ public class AutoRedClose_GateGood extends OpMode {
 
         robot = Robot.startInstance(startPose, Robot.Color.RED);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
+        robot.stopper.close();
         follower = robot.follower;
         follower.getConstraints().setBrakingStrength(1);
 //        follower = Constants.createFollower(hardwareMap);

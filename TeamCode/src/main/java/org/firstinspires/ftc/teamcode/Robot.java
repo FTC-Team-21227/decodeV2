@@ -45,7 +45,7 @@ public class Robot {
 //    AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection, switch to limelight later
     Limelight camera;
 //    BallDetector ballDetector;
-    Stopper stopper;
+    public Stopper stopper;
     LED redled;
     LED greenled;
 //    Voltage voltageSensor;
@@ -640,7 +640,7 @@ public class Robot {
             // Get camera's pose (field-relative) using AprilTag
             Pose poseWorldTurret = camera.update(/*Math.toDegrees(txWorldPinpoint.getHeading()), */telemetry);
             // If no pose was found, default to the pinpoint localizer
-            if (poseWorldTurret == null){
+            if (poseWorldTurret == null || poseWorldTurret.equals(new Pose(0,0,0))){
                 return false; // EXIT METHOD
             }
 
@@ -654,7 +654,8 @@ public class Robot {
             txWorldPinpoint = poseWorldRobot;
             // Set the localizer pose to the current field-relative pose based on AprilTag reading.
             base.setPose(FTCToPedro(poseWorldRobot));//.getAsCoordinateSystem(PedroCoordinates.INSTANCE));
-
+            Positions.flywheelPowerOffset = 0;
+            Positions.turretAngleManualOffset = 0;
             // Telemetry displays robot position and heading information
             RobotLog.a(String.format("Pose XY %6.1f %6.1f  (inch)",
                     poseWorldRobot.getX(),
@@ -946,8 +947,9 @@ public class Robot {
         public final static boolean MINIMIZE_TELEMETRY = false;
         public final static boolean friedFeed = true;
         public static double flywheelPower = 2.072;
-        public static double flywheelPower_Tele = 2.072;
-        public static double flywheelPower_Far = 1.701; //1.631;
+        public static double flywheelPower_Tele = 2.090;
+        public static double flywheelPower_Far = 1.655;
+        public static double flywheelPowerFar_Tele = 1.701;
         public static double hoodAngleOffset = 0;
         public final static double p = 0.65; //proportion along the trajectory
         public final static double p_far = 0.55;
@@ -977,7 +979,7 @@ public class Robot {
         public final static double slowIntakePower = 0.7;
         public final static double intakePower = 1.0;
         public final static double shootPower = 1.0;
-        public final static double shootPower_Far = 0.8; //intake power ONLY for shooting
+        public final static double shootPower_Far = 0.45; //intake power ONLY for shooting
         public final static double outtakePower = 0.6;
         public final static double intakePulseTime = 0.55;
         public final static double outtakePulseTime = 0.15;
@@ -1085,9 +1087,9 @@ public class Robot {
 //            follower.rightBack.setPower(Motor_power_BR / maxPowerMag);
 //            follower.base.drivetrain.runDrive(new double[]{Motor_power_FL / maxPowerMag, Motor_power_BL / maxPowerMag, Motor_power_FR / maxPowerMag, Motor_power_BR / maxPowerMag});
             follower.setTeleOpDrive(
-                    forward * driveSideSign,
-                    right * driveSideSign,
-                    -rotate,
+                    forward * driveSideSign * Positions.drivePower,
+                    right * driveSideSign * Positions.drivePower,
+                    -rotate * Positions.drivePower,
                     false // Robot Centric][poiuytewq
             );
 //            follower.activateHeading();

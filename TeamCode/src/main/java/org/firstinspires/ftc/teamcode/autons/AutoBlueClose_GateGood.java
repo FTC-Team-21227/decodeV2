@@ -13,10 +13,11 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.Robot;
 
 @Autonomous
-public class AutoRedClose_GateGood extends OpMode {
+public class AutoBlueClose_GateGood extends OpMode {
     private Robot robot;
     private Robot.AprilFollower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
+    private Pose shootPose = PedroToFTC(new Pose(60, 85, Math.toRadians(225)));
 
     private enum PathState{
         START,
@@ -47,18 +48,18 @@ public class AutoRedClose_GateGood extends OpMode {
     private boolean intake;
     private boolean shoot;
     private boolean lock;
-    private final Pose startPose = new Pose(128.3959, 113.0594, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(60+2*(72-60), 89, Math.toRadians(45)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pickup1Pose = new Pose(25+2*(72-25), 85, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(25+2*(72-25), 58, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickup3Pose = new Pose(25+2*(72-25), 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickupGatePose = new Pose(19+2*(72-19), 62, Math.toRadians(30)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose startPose = new Pose(144-128.3959, 113.0594, Math.toRadians(270)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(60, 89, Math.toRadians(225)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose pickup1Pose = new Pose(26, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(25, 58, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private final Pose pickup3Pose = new Pose(25, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickupGatePose = new Pose(14, 62.5, Math.toRadians(205)); // Lowest (Third Set) of Artifacts from the Spike Mark.
 //    private final Pose intakeGatePose = new Pose(15+2*(72-15), 56, Math.toRadians(60));
-    private final Pose parkPose = new Pose(60+2*(72-60), 75, Math.toRadians(45));
+    private final Pose parkPose = new Pose(60, 99, Math.toRadians(225));
 
     private Path scorePreload;
-    private PathChain grabPickup1,  grabPickup2,  grabPickup3;
-    private Path scorePickup1, scorePickup2, scorePickup3, scoreGate1, grabGate1, scoreGate2, grabGate2, park;
+    private PathChain grabPickup1,  grabPickup2,  grabPickup3, grabGate1, grabGate2;
+    private Path scorePickup1, scorePickup2, scorePickup3, scoreGate1,  scoreGate2, park;
 
     boolean reset = true;
     public void buildPaths() {
@@ -75,7 +76,7 @@ public class AutoRedClose_GateGood extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
 //                .build();
         grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60+2*(72-60),85,Math.toRadians(0)), pickup1Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(60,85,Math.toRadians(180)), pickup1Pose))
                 .setConstantHeadingInterpolation(pickup1Pose.getHeading())
                 .build();
 
@@ -89,7 +90,7 @@ public class AutoRedClose_GateGood extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
 //                .build();
         grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60+2*(72-60),62,Math.toRadians(0)), pickup2Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(60,58,Math.toRadians(180)), pickup2Pose))
                 .setConstantHeadingInterpolation(pickup2Pose.getHeading())
                 .build();
 
@@ -103,45 +104,49 @@ public class AutoRedClose_GateGood extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
 //                .build();
         grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(75+2*(72-75),39,Math.toRadians(0)), pickup3Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(70,35,Math.toRadians(180)), pickup3Pose))
                 .setConstantHeadingInterpolation(pickup3Pose.getHeading())
                 .build();
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup3 = new Path(new BezierLine(pickup3Pose, scorePose));
-        scorePickup3.setLinearHeadingInterpolation(pickup3Pose.getHeading(),scorePose.getHeading());
-        grabGate1 = new Path(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose));
-                grabGate1.setConstantHeadingInterpolation(pickupGatePose.getHeading());
-                grabGate1.setBrakingStrength(10);
-                grabGate1.setBrakingStart(0.5);
+        scorePickup3 = new Path(new BezierLine(pickup3Pose, parkPose));
+        scorePickup3.setLinearHeadingInterpolation(pickup3Pose.getHeading(),parkPose.getHeading());
+        grabGate1 = follower.pathBuilder()
+                .addPath(new BezierCurve(scorePose, new Pose(40,50,Math.toRadians(180)), pickupGatePose))
+                .setConstantHeadingInterpolation(pickupGatePose.getHeading())
+//                .setBrakingStrength(0.3)
+                .build();
+//                grabGate1.setBrakingStart(2);
 //        intakeGate1 = new Path(new BezierLine(pickupGatePose,intakeGatePose));
 //        intakeGate1.setLinearHeadingInterpolation(pickupGatePose.getHeading(), intakeGatePose.getHeading());
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scoreGate1 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate1 = new Path(new BezierCurve(pickupGatePose, new Pose(40,50,Math.toRadians(180)), scorePose));
         scoreGate1.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
-        grabGate2 = new Path(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose));
-        grabGate2.setConstantHeadingInterpolation(pickupGatePose.getHeading());
-        grabGate2.setBrakingStrength(10);
-        grabGate1.setBrakingStart(0.5);
+        grabGate2 = follower.pathBuilder()
+                .addPath(new BezierCurve(scorePose, new Pose(40,50,Math.toRadians(180)), pickupGatePose))
+                .setConstantHeadingInterpolation(pickupGatePose.getHeading())
+//                .setBrakingStrength(0.3)
+                .build();
+        //        grabGate1.setBrakingStart(2);
 
 //        intakeGate2 = new Path(new BezierLine(pickupGatePose,intakeGatePose));
 //        intakeGate2.setLinearHeadingInterpolation(pickupGatePose.getHeading(), intakeGatePose.getHeading());
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scoreGate2 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate2 = new Path(new BezierCurve(pickupGatePose, new Pose(40,50,Math.toRadians(180)), scorePose));
         scoreGate2.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
 
         park = new Path(new BezierLine(scorePose, parkPose));
         park.setConstantHeadingInterpolation(parkPose.getHeading());
-
     }
 
     public void autonomousPathUpdate() {
         switch (pathState) {
             case START:
+                follower.getConstraints().setBrakingStart(4);
                 follower.followPath(scorePreload);
-                intake = false;
+                intake = true;
                 shoot = false;
                 lock = true;
                 setPathState(PathState.SCOREPRELOAD);
@@ -160,6 +165,7 @@ public class AutoRedClose_GateGood extends OpMode {
                 }
                 if (!follower.isBusy()) {
                     /* Score Preload */
+                    intake = false;
                     setPathState(PathState.SCORINGPRELOAD); //every time set path state is called, pathtimer is reset
                     RobotLog.a("score preload -> scoring preload");
                 }
@@ -173,7 +179,8 @@ public class AutoRedClose_GateGood extends OpMode {
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
                     lock = true;
                     /* Move to Intake Balls */
-                    follower.followPath(grabPickup2, true);
+                    follower.getConstraints().setBrakingStart(1);
+                    follower.followPath(grabPickup2, false);
                     setPathState(PathState.PICKUP2);
                     RobotLog.a("scoring preload -> pickup 1");
                 }
@@ -209,6 +216,7 @@ public class AutoRedClose_GateGood extends OpMode {
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
                     lock = true;
                     /* Move to Intake Balls */
+                    follower.getConstraints().setBrakingStrength(0.3);
                     follower.followPath(grabGate1, true);
                     setPathState(PathState.PICKUPGATE1);
                 }
@@ -221,8 +229,9 @@ public class AutoRedClose_GateGood extends OpMode {
                 }
                 break;
             case INTAKINGGATE1:
-                if (pathTimer.getElapsedTimeSeconds() > 1.5){
+                if (pathTimer.getElapsedTimeSeconds() > 1){
                     intake = false;
+                    follower.getConstraints().setBrakingStrength(1);
                     follower.followPath(scoreGate1);
                     setPathState(PathState.SCOREGATE1);
                 }
@@ -249,6 +258,7 @@ public class AutoRedClose_GateGood extends OpMode {
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
                     lock = true;
                     /* Move to Intake Balls */
+                    follower.getConstraints().setBrakingStrength(0.3);
                     follower.followPath(grabGate2, true);
                     setPathState(PathState.PICKUPGATE2);
                 }
@@ -261,8 +271,9 @@ public class AutoRedClose_GateGood extends OpMode {
                 }
                 break;
             case INTAKINGGATE2:
-                if (pathTimer.getElapsedTimeSeconds() > 1.5){
+                if (pathTimer.getElapsedTimeSeconds() > 1){
                     intake = false;
+                    follower.getConstraints().setBrakingStrength(1);
                     follower.followPath(scoreGate2);
                     setPathState(PathState.SCOREGATE2);
                 }
@@ -289,7 +300,7 @@ public class AutoRedClose_GateGood extends OpMode {
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
                     lock = true;
                     /* Move to Intake Balls */
-                    follower.followPath(grabPickup1, true);
+                    follower.followPath(grabPickup1, false);
                     setPathState(PathState.PICKUP1);
                 }
                 break;
@@ -323,7 +334,7 @@ public class AutoRedClose_GateGood extends OpMode {
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
                     lock = true;
                     /* Move to Intake Balls */
-                    follower.followPath(grabPickup3, true);
+                    follower.followPath(grabPickup3, false);
                     setPathState(PathState.PICKUP3);
                 }
                 break;
@@ -332,6 +343,7 @@ public class AutoRedClose_GateGood extends OpMode {
                 if (!follower.isBusy()) {
                     /* Move to Score Balls */
                     follower.followPath(scorePickup3, true);
+                    shootPose = PedroToFTC(new Pose(60+2*(72-60), 99, Math.toRadians(45)));
                     setPathState(PathState.SCORE3);
                 }
                 break;
@@ -353,15 +365,16 @@ public class AutoRedClose_GateGood extends OpMode {
                 }
                 if (pathTimer.getElapsedTimeSeconds() > 1){
                     shoot = false;
-                    follower.followPath(park, true);
+//                    follower.followPath(park, true);
                     setPathState(PathState.PARK);
                 }
                 break;
             case PARK:
-                if (!follower.isBusy()){
+//                if (!follower.isBusy()){
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     setPathState(PathState.DONE);
-                }
+//                }
+                break;
         }
     }
 
@@ -388,7 +401,7 @@ public class AutoRedClose_GateGood extends OpMode {
 //        robot.updateBallDetector();
         robot.setPose(PedroToFTC(follower.getPose()));
         robot.updateIntake(intake, false, !intake, shoot, telemetry);
-        robot.updateShooter(telemetry, true, false, false, true, false, false, PedroToFTC(new Pose(60+2*(72-60), 85, Math.toRadians(45))), 0,false,false,false,false);
+        robot.updateShooter(telemetry, true, false, false, true, false, false, shootPose, 0,false,false,false,false);
         autonomousPathUpdate();
         //autonomousSubsystemsUpdate();
         // Feedback to Driver Hub for debugging
@@ -408,13 +421,16 @@ public class AutoRedClose_GateGood extends OpMode {
      **/
     @Override
     public void init() {
+        RobotLog.a("bro!!!");
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         actionTimer = new Timer();
 
-        robot = Robot.startInstance(startPose, Robot.Color.RED);
+        robot = Robot.startInstance(startPose, Robot.Color.BLUE);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
+        robot.stopper.close();
         follower = robot.follower;
+        follower.getConstraints().setBrakingStrength(1);
 //        follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);

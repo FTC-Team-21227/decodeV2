@@ -13,11 +13,11 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.Robot;
 
 @Autonomous
-public class AutoRedClose_Teammate extends OpMode {
+public class AutoBlueClose_Teammate extends OpMode {
     private Robot robot;
     private Robot.AprilFollower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
-    private Pose shootPose = PedroToFTC(new Pose(60+2*(72-60), 85, Math.toRadians(45)));
+    private Pose shootPose = PedroToFTC(new Pose(60, 85, Math.toRadians(225)));
 
     private enum PathState{
         START,
@@ -49,13 +49,13 @@ public class AutoRedClose_Teammate extends OpMode {
     private boolean intake;
     private boolean shoot;
     private boolean lock;
-    private final Pose startPose = new Pose(128.3959, 113.0594, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(60+2*(72-60), 89, Math.toRadians(45)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pickup1Pose = new Pose(26+2*(72-26), 85, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(25+2*(72-25), 58, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickupGatePose = new Pose(14+2*(72-14), 62.25, Math.toRadians(25)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose startPose = new Pose(144-128.3959, 113.0594, Math.toRadians(270)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(60, 89, Math.toRadians(225)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose pickup1Pose = new Pose(26, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(25, 58, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private final Pose pickupGatePose = new Pose(14, 62.25, Math.toRadians(205)); // Lowest (Third Set) of Artifacts from the Spike Mark.
 //    private final Pose intakeGatePose = new Pose(15+2*(72-15), 56, Math.toRadians(60));
-    private final Pose parkPose = new Pose(60+2*(72-60), 99, Math.toRadians(45));
+    private final Pose parkPose = new Pose(60, 99, Math.toRadians(225));
 
     private Path scorePreload;
     private PathChain grabPickup1,  grabPickup2,  grabGate1, grabGate2, grabGate3;
@@ -76,7 +76,7 @@ public class AutoRedClose_Teammate extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
 //                .build();
         grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60+2*(72-60),85,Math.toRadians(0)), pickup1Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(60,85,Math.toRadians(180)), pickup1Pose))
                 .setConstantHeadingInterpolation(pickup1Pose.getHeading())
                 .build();
 
@@ -90,7 +90,7 @@ public class AutoRedClose_Teammate extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
 //                .build();
         grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60+2*(72-60),58,Math.toRadians(0)), pickup2Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(60,58,Math.toRadians(180)), pickup2Pose))
                 .setConstantHeadingInterpolation(pickup2Pose.getHeading())
                 .build();
 
@@ -104,7 +104,7 @@ public class AutoRedClose_Teammate extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
 //                .build();
         grabGate1 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose))
+                .addPath(new BezierCurve(scorePose, new Pose(40,50,Math.toRadians(180)), pickupGatePose))
                 .setConstantHeadingInterpolation(pickupGatePose.getHeading())
 //                .setBrakingStrength(0.3)
                 .build();
@@ -113,10 +113,10 @@ public class AutoRedClose_Teammate extends OpMode {
 //        intakeGate1.setLinearHeadingInterpolation(pickupGatePose.getHeading(), intakeGatePose.getHeading());
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scoreGate1 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate1 = new Path(new BezierCurve(pickupGatePose, new Pose(40,50,Math.toRadians(180)), scorePose));
         scoreGate1.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
         grabGate2 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose))
+                .addPath(new BezierCurve(scorePose, new Pose(40,50,Math.toRadians(180)), pickupGatePose))
                 .setConstantHeadingInterpolation(pickupGatePose.getHeading())
 //                .setBrakingStrength(0.3)
                 .build();
@@ -126,17 +126,17 @@ public class AutoRedClose_Teammate extends OpMode {
 //        intakeGate2.setLinearHeadingInterpolation(pickupGatePose.getHeading(), intakeGatePose.getHeading());
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scoreGate2 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate2 = new Path(new BezierCurve(pickupGatePose, new Pose(40,50,Math.toRadians(180)), scorePose));
         scoreGate2.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
 
         grabGate3 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose))
+                .addPath(new BezierCurve(scorePose, new Pose(40,50,Math.toRadians(180)), pickupGatePose))
                 .setConstantHeadingInterpolation(pickupGatePose.getHeading())
 //                .setBrakingStrength(0.3)
                 .build();
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scoreGate3 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate3 = new Path(new BezierCurve(pickupGatePose, new Pose(40,50,Math.toRadians(180)), scorePose));
         scoreGate3.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
 
         park = new Path(new BezierLine(scorePose, parkPose));
@@ -148,7 +148,7 @@ public class AutoRedClose_Teammate extends OpMode {
             case START:
                 follower.getConstraints().setBrakingStart(4);
                 follower.followPath(scorePreload);
-                intake = false;
+                intake = true;
                 shoot = false;
                 lock = true;
                 setPathState(PathState.SCOREPRELOAD);
@@ -167,15 +167,16 @@ public class AutoRedClose_Teammate extends OpMode {
                 }
                 if (!follower.isBusy()) {
                     /* Score Preload */
+                    intake = false;
                     setPathState(PathState.SCORINGPRELOAD); //every time set path state is called, pathtimer is reset
                     RobotLog.a("score preload -> scoring preload");
                 }
                 break;
             case SCORINGPRELOAD:
-                if (pathTimer.getElapsedTimeSeconds() > 0.3){
+                if (pathTimer.getElapsedTimeSeconds() > 0.4){
                     shoot = true;
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 0.67){
+                if (pathTimer.getElapsedTimeSeconds() > 0.77){
                     shoot = false;
                     intake = true; //maybe problem: stopper gets stuck, could try using analog encoder
                     lock = true;
@@ -349,7 +350,7 @@ public class AutoRedClose_Teammate extends OpMode {
                 if (!follower.isBusy()) {
                     /* Move to Score Balls */
                     follower.followPath(scorePickup1, true);
-                    shootPose = PedroToFTC(new Pose(60+2*(72-60), 99, Math.toRadians(45)));
+                    shootPose = PedroToFTC(new Pose(60, 99, Math.toRadians(225)));
                     setPathState(PathState.SCORE1);
                 }
                 break;
@@ -383,6 +384,7 @@ public class AutoRedClose_Teammate extends OpMode {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     setPathState(PathState.DONE);
 //                }
+                break;
         }
     }
 
@@ -434,8 +436,9 @@ public class AutoRedClose_Teammate extends OpMode {
         opmodeTimer = new Timer();
         actionTimer = new Timer();
 
-        robot = Robot.startInstance(startPose, Robot.Color.RED);
+        robot = Robot.startInstance(startPose, Robot.Color.BLUE);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
+        robot.stopper.close();
         follower = robot.follower;
         follower.getConstraints().setBrakingStrength(1);
 //        follower = Constants.createFollower(hardwareMap);
