@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.Robot;
 
 @Autonomous
-public class AutoRedClose_GateGood extends OpMode {
+public class AutoBlueClose_GateGood extends OpMode {
     private Robot robot;
     private Robot.AprilFollower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -42,25 +42,31 @@ public class AutoRedClose_GateGood extends OpMode {
         PARK,
         DONE
     }
+
     private PathState pathState;
     private int intakeState;
     private boolean intake;
     private boolean shoot;
     private boolean lock;
-    private final Pose startPose = new Pose(128.3959, 113.0594, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(60+2*(72-60), 89, Math.toRadians(45)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pickup1Pose = new Pose(25+2*(72-25), 85, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(25+2*(72-25), 58, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickup3Pose = new Pose(25+2*(72-25), 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickupGatePose = new Pose(19+2*(72-19), 62, Math.toRadians(30)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-//    private final Pose intakeGatePose = new Pose(15+2*(72-15), 56, Math.toRadians(60));
-    private final Pose parkPose = new Pose(60+2*(72-60), 75, Math.toRadians(45));
 
+    // Poses--------------------------------------------------------------------------------
+    private final Pose startPose = new Pose(144 - 128.3959, 113.0594, Math.toRadians(90 + 180)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(144 - 60+2*(72-60), 89, Math.toRadians(45 + 180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose pickup1Pose = new Pose(144 - 25+2*(72-25), 85, Math.toRadians(0 + 180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(144 - 25+2*(72-25), 58, Math.toRadians(0 + 180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private final Pose pickup3Pose = new Pose(144 - 25+2*(72-25), 35, Math.toRadians(0 + 180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickupGatePose = new Pose(144 - 19+2*(72-19), 62, Math.toRadians(30 + 180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+//    private final Pose intakeGatePose = new Pose(15+2*(72-15), 56, Math.toRadians(60));
+    private final Pose parkPose = new Pose(144 - 60+2*(72-60), 75, Math.toRadians(45 + 180));
+
+    // Declare paths------------------------------------------------------------------------
     private Path scorePreload;
     private PathChain grabPickup1,  grabPickup2,  grabPickup3;
     private Path scorePickup1, scorePickup2, scorePickup3, scoreGate1, grabGate1, scoreGate2, grabGate2, park;
 
     boolean reset = true;
+
+    // Define paths------------------------------------------------------------------------
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePose));
@@ -75,7 +81,7 @@ public class AutoRedClose_GateGood extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
 //                .build();
         grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60+2*(72-60),85,Math.toRadians(0)), pickup1Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(144 - 60+2*(72-60),85,Math.toRadians(0 + 180)), pickup1Pose))
                 .setConstantHeadingInterpolation(pickup1Pose.getHeading())
                 .build();
 
@@ -89,7 +95,7 @@ public class AutoRedClose_GateGood extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
 //                .build();
         grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(60+2*(72-60),62,Math.toRadians(0)), pickup2Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(144 - 60+2*(72-60),62,Math.toRadians(0 + 180)), pickup2Pose))
                 .setConstantHeadingInterpolation(pickup2Pose.getHeading())
                 .build();
 
@@ -103,14 +109,14 @@ public class AutoRedClose_GateGood extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
 //                .build();
         grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(75+2*(72-75),39,Math.toRadians(0)), pickup3Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(144 - 75+2*(72-75),39,Math.toRadians(0 + 180)), pickup3Pose))
                 .setConstantHeadingInterpolation(pickup3Pose.getHeading())
                 .build();
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup3 = new Path(new BezierLine(pickup3Pose, scorePose));
         scorePickup3.setLinearHeadingInterpolation(pickup3Pose.getHeading(),scorePose.getHeading());
-        grabGate1 = new Path(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose));
+        grabGate1 = new Path(new BezierCurve(scorePose, new Pose(144 - 40+2*(72-40),50,0 + 180), pickupGatePose));
                 grabGate1.setConstantHeadingInterpolation(pickupGatePose.getHeading());
                 grabGate1.setBrakingStrength(10);
                 grabGate1.setBrakingStart(0.5);
@@ -118,9 +124,9 @@ public class AutoRedClose_GateGood extends OpMode {
 //        intakeGate1.setLinearHeadingInterpolation(pickupGatePose.getHeading(), intakeGatePose.getHeading());
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scoreGate1 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate1 = new Path(new BezierCurve(pickupGatePose, new Pose(144 - 40+2*(72-40),50,0 + 180), scorePose));
         scoreGate1.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
-        grabGate2 = new Path(new BezierCurve(scorePose, new Pose(40+2*(72-40),50,0), pickupGatePose));
+        grabGate2 = new Path(new BezierCurve(scorePose, new Pose(144 - 40+2*(72-40),50,0 + 180), pickupGatePose));
         grabGate2.setConstantHeadingInterpolation(pickupGatePose.getHeading());
         grabGate2.setBrakingStrength(10);
         grabGate1.setBrakingStart(0.5);
@@ -129,7 +135,7 @@ public class AutoRedClose_GateGood extends OpMode {
 //        intakeGate2.setLinearHeadingInterpolation(pickupGatePose.getHeading(), intakeGatePose.getHeading());
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scoreGate2 = new Path(new BezierCurve(pickupGatePose, new Pose(40+2*(72-40),50,0), scorePose));
+        scoreGate2 = new Path(new BezierCurve(pickupGatePose, new Pose(144 - 40+2*(72-40),50,0 + 180), scorePose));
         scoreGate2.setLinearHeadingInterpolation(pickupGatePose.getHeading(),scorePose.getHeading());
 
         park = new Path(new BezierLine(scorePose, parkPose));
@@ -382,7 +388,6 @@ public class AutoRedClose_GateGood extends OpMode {
      **/
     @Override
     public void loop() {
-
         // These loop the movements of the robot, these must be called continuously in order to work
         follower.update();
 //        robot.updateBallDetector();

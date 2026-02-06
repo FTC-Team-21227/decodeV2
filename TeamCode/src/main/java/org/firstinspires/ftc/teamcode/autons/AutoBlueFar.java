@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.Robot;
 
 @Autonomous
-public class AutoRedFar extends OpMode {
+public class AutoBlueFar extends OpMode {
     private Robot robot;
     private Robot.AprilFollower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -45,18 +45,18 @@ public class AutoRedFar extends OpMode {
     private boolean intake;
     private boolean shoot;
     private boolean lock;
-    private final Pose startPose = new Pose(88.4213, 6.6302, Math.toRadians(0)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(88.4213, 12.6302, Math.toRadians(0)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose startPose = new Pose(144 - 88.4213, 6.6302, Math.toRadians(0 + 180)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(144 - 88.4213, 12.6302, Math.toRadians(0 + 180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose shootPose = PedroToFTC(scorePose);
-    private final Pose pickup1Pose = new Pose(132.5624, 8.3616, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(15+2*(72-15), 40, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickup1Pose = new Pose(144 - 132.5624, 8.3616, Math.toRadians(0 + 180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(144 - 15+2*(72-15), 40, Math.toRadians(0 + 180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup4Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup5Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
 
 
     //    private final Pose intakeGatePose = new Pose(15+2*(72-15), 56, Math.toRadians(60));
-    private final Pose parkPose = new Pose(94.4213, 12.6302, Math.toRadians(0));
+    private final Pose parkPose = new Pose(144 - 94.4213, 12.6302, Math.toRadians(0 + 180));
 
     private Path scorePreload;
     private PathChain grabPickup1,  grabPickup2,  grabPickup3, grabPickup4, grabPickup5;
@@ -91,7 +91,7 @@ public class AutoRedFar extends OpMode {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
 //                .build();
         grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, new Pose(50+2*(72-50),40,Math.toRadians(0)), pickup2Pose))
+                .addPath(new BezierCurve(scorePose, new Pose(144 - 50+2*(72-50),40,Math.toRadians(0 + 180)), pickup2Pose))
                 .setConstantHeadingInterpolation(pickup2Pose.getHeading())
                 .build();
 
