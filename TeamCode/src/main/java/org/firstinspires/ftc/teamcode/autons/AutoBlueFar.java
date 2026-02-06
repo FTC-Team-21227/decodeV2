@@ -47,8 +47,8 @@ public class AutoBlueFar extends OpMode {
     private final Pose startPose = new Pose(144-88.4213, 6.6302, Math.toRadians(180)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(144-88.4213, 17.6302, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose shootPose = PedroToFTC(scorePose);
-    private final Pose pickup1Pose = new Pose(132.5624, 6.3616, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(20, 40, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickup1Pose = new Pose(144-132.5624, 6.3616, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(144-124, 40, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup4Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup5Pose = pickup1Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.

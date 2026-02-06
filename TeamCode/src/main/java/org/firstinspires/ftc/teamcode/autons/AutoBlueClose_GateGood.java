@@ -17,7 +17,7 @@ public class AutoBlueClose_GateGood extends OpMode {
     private Robot robot;
     private Robot.AprilFollower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
-    private Pose shootPose = PedroToFTC(new Pose(60, 85, Math.toRadians(225)));
+    private Pose shootPose = PedroToFTC(new Pose(60, 85, Math.toRadians(135)));
 
     private enum PathState{
         START,
@@ -48,14 +48,14 @@ public class AutoBlueClose_GateGood extends OpMode {
     private boolean intake;
     private boolean shoot;
     private boolean lock;
-    private final Pose startPose = new Pose(144-128.3959, 113.0594, Math.toRadians(270)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(60, 89, Math.toRadians(225)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose startPose = new Pose(144-128.3959, 113.0594, Math.toRadians(90)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(60, 89, Math.toRadians(135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose pickup1Pose = new Pose(26, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Pose = new Pose(25, 58, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = new Pose(25, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickupGatePose = new Pose(14, 62.5, Math.toRadians(205)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickupGatePose = new Pose(14, 62.5, Math.toRadians(155)); // Lowest (Third Set) of Artifacts from the Spike Mark.
 //    private final Pose intakeGatePose = new Pose(15+2*(72-15), 56, Math.toRadians(60));
-    private final Pose parkPose = new Pose(60, 99, Math.toRadians(225));
+    private final Pose parkPose = new Pose(60, 99, Math.toRadians(135));
 
     private Path scorePreload;
     private PathChain grabPickup1,  grabPickup2,  grabPickup3, grabGate1, grabGate2;
@@ -343,7 +343,7 @@ public class AutoBlueClose_GateGood extends OpMode {
                 if (!follower.isBusy()) {
                     /* Move to Score Balls */
                     follower.followPath(scorePickup3, true);
-                    shootPose = PedroToFTC(new Pose(60+2*(72-60), 99, Math.toRadians(45)));
+                    shootPose = PedroToFTC(new Pose(60+2*(72-60), 99, Math.toRadians(135)));
                     setPathState(PathState.SCORE3);
                 }
                 break;
@@ -360,7 +360,7 @@ public class AutoBlueClose_GateGood extends OpMode {
                 }
                 break;
             case SCORING3:
-                if (pathTimer.getElapsedTimeSeconds() > 0.67){
+                if (pathTimer.getElapsedTimeSeconds() > 0.6){ // 0.67
                     shoot = true;
                 }
                 if (pathTimer.getElapsedTimeSeconds() > 1){
